@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import type { BilibiliSubtitlesResponse } from ".."
+import type { TrackLanguagePreference } from "@/utils/subtitles/track-language"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { NoSubtitlesError } from "@/utils/subtitles/errors"
 import { bilibiliTrackSource } from ".."
@@ -11,6 +12,11 @@ vi.mock("@/utils/sleep", () => ({ sleep: () => Promise.resolve() }))
 const postMessageRequest = vi.fn<(...args: unknown[]) => Promise<unknown>>()
 vi.mock("@/utils/subtitles/fetchers/post-message-request", () => ({
   postMessageRequest: (...args: unknown[]) => postMessageRequest(...args),
+}))
+
+const readTrackLanguagePreference = vi.fn<() => Promise<TrackLanguagePreference | null>>()
+vi.mock("@/utils/subtitles/read-track-language-preference", () => ({
+  readTrackLanguagePreference: () => readTrackLanguagePreference(),
 }))
 
 const HUMAN = { lan: "zh-CN", subtitle_url: "//i0.hdslb.com/bfs/subtitle/zh.json" }
@@ -38,7 +44,8 @@ const fetchMock = vi.fn<typeof fetch>()
 beforeEach(() => {
   window.history.replaceState(null, "", "/video/BV1XZn26rE8x/?p=2")
   postMessageRequest.mockResolvedValue(response())
-  fetchMock.mockResolvedValue(Response.json(FILE))
+  readTrackLanguagePreference.mockResolvedValue(null)
+  fetchMock.mockImplementation(async () => Response.json(FILE))
   vi.stubGlobal("fetch", fetchMock)
 })
 
@@ -118,5 +125,43 @@ describe("bilibiliTrackSource", () => {
     await expect(bilibiliTrackSource.load(PART_ID)).rejects.toThrow(
       "subtitles.errors.trackFileNotLoaded",
     )
+  })
+})
+
+describe("bilibiliTrackSource by language settings", () => {
+  const EN = { lan: "en-US", subtitle_url: "//i0.hdslb.com/bfs/subtitle/en.json" }
+  const JA = { lan: "ja", subtitle_url: "//i0.hdslb.com/bfs/subtitle/ja.json" }
+  const AI_EN = { lan: "ai-en", subtitle_url: "//aisubtitle.hdslb.com/bfs/ai_subtitle/en.json" }
+
+  async function loadedLanguage() {
+    return (await bilibiliTrackSource.load(PART_ID)).language
+  }
+
+  it("loads the uploader's target-language subtitles over one listed first", async () => {
+    readTrackLanguagePreference.mockResolvedValue({ target: "zh-Hans", source: null })
+    postMessageRequest.mockResolvedValue(response({ subtitles: [EN, HUMAN] }))
+
+    await expect(loadedLanguage()).resolves.toBe("zh-CN")
+  })
+
+  it("falls back to the uploader's source-language subtitles", async () => {
+    readTrackLanguagePreference.mockResolvedValue({ target: "zh-Hans", source: "en" })
+    postMessageRequest.mockResolvedValue(response({ subtitles: [JA, EN] }))
+
+    await expect(loadedLanguage()).resolves.toBe("en-US")
+  })
+
+  it("never picks AI subtitles by language, which may be machine-translated", async () => {
+    readTrackLanguagePreference.mockResolvedValue({ target: "en", source: null })
+    postMessageRequest.mockResolvedValue(response({ subtitles: [JA, AI_EN] }))
+
+    await expect(loadedLanguage()).resolves.toBe("ja")
+  })
+
+  it("keeps the usual pick while the setting is off", async () => {
+    readTrackLanguagePreference.mockResolvedValue(null)
+    postMessageRequest.mockResolvedValue(response({ subtitles: [EN, HUMAN] }))
+
+    await expect(loadedLanguage()).resolves.toBe("en-US")
   })
 })
