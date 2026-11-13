@@ -1,6 +1,10 @@
 import { CUSTOM_ACTION_NOTEBASE_SECTION_ID } from "@/utils/navigation"
 import { ACCOUNT_FEATURES_ENABLED } from "./flag"
 
+export function shouldOpenInstallGuide(): boolean {
+  return ACCOUNT_FEATURES_ENABLED
+}
+
 export const HIDDEN_ACCOUNT_SECTION_IDS: ReadonlySet<string> = new Set(
   ACCOUNT_FEATURES_ENABLED
     ? []
