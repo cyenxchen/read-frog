@@ -2,6 +2,7 @@ import type { CacheConfig } from "@/types/proxy-fetch"
 import { AUTH_BASE_PATH } from "@read-frog/definitions"
 import { createAuthClient } from "better-auth/react"
 import { env } from "@/env"
+import { guardedAuthFetch } from "@/utils/account-features/network-guard" // fork:account-off
 import { AUTH_CACHE_GROUP_KEY } from "@/utils/constants/proxy-fetch"
 import { sendMessage } from "@/utils/message"
 import { normalizeHeaders } from "../http"
@@ -39,12 +40,16 @@ function createCustomFetch(cacheConfig?: CacheConfig) {
   }
 }
 
+const createAccountFetch = (cacheConfig?: CacheConfig) =>
+  guardedAuthFetch(createCustomFetch(cacheConfig)) // fork:account-off
+
 export const authClient = createAuthClient({
   baseURL: env.WXT_API_URL,
   basePath: AUTH_BASE_PATH,
   fetchOptions: {
     credentials: "include",
-    customFetchImpl: createCustomFetch({
+    customFetchImpl: createAccountFetch({
+      // fork:account-off
       enabled: true,
       groupKey: AUTH_CACHE_GROUP_KEY,
     }),

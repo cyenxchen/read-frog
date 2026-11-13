@@ -1,10 +1,12 @@
 import type { Config } from "@/types/config/config"
 import type { ProviderConfig } from "@/types/config/provider"
 import { isLLMProvider, isTranslateProvider } from "@/types/config/provider"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { mergeWithArrayOverwrite } from "../atoms/config"
 import { getProviderConfigById } from "../config/helpers"
 
-export const FEATURE_KEYS = [
+const ALL_FEATURE_KEYS = [
+  // fork:account-off
   "pageTranslation",
   "videoSubtitles",
   "selectionTranslation",
@@ -12,7 +14,10 @@ export const FEATURE_KEYS = [
   "noteSuggestion",
 ] as const
 
-export type FeatureKey = (typeof FEATURE_KEYS)[number]
+export type FeatureKey = (typeof ALL_FEATURE_KEYS)[number] // fork:account-off
+export const FEATURE_KEYS: readonly FeatureKey[] = ALL_FEATURE_KEYS.filter(
+  (key) => ACCOUNT_FEATURES_ENABLED || key !== "noteSuggestion",
+) // fork:account-off
 
 export interface FeatureProviderDef {
   getProviderId: (config: Config) => string

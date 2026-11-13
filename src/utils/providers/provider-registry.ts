@@ -8,6 +8,7 @@ import type {
 } from "@/utils/providers/provider-display"
 import readFrogLogo from "@/assets/providers/read-frog-provider.png?url&no-inline"
 import { isLLMProviderConfig, isTranslateProviderConfig } from "@/types/config/provider"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import {
   BUILT_IN_AI_PROVIDER_ID,
   BUILT_IN_AI_PROVIDER_IDS,
@@ -97,6 +98,7 @@ const SYSTEM_PROVIDER_DEFS = {
 } as const satisfies Record<string, SystemProviderDef>
 
 function getSystemProviderDefs(): SystemProviderDef[] {
+  if (!ACCOUNT_FEATURES_ENABLED) return [] // fork:account-off
   return Object.values(SYSTEM_PROVIDER_DEFS)
 }
 
@@ -199,7 +201,9 @@ export function doesProviderSupportsCapability(
     )
   }
 
-  const systemProvider = getSystemProviderDef(providerId)
+  const systemProvider = Object.values<SystemProviderDef>(SYSTEM_PROVIDER_DEFS).find(
+    (def) => def.id === providerId,
+  ) // fork:account-off
   return !!systemProvider?.capabilities.includes(capability)
 }
 
