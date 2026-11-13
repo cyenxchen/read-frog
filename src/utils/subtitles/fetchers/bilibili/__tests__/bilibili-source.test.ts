@@ -144,6 +144,17 @@ describe("bilibiliTrackSource by language settings", () => {
     await expect(loadedLanguage()).resolves.toBe("zh-CN")
   })
 
+  it("downloads a blank file once when the usual pick is already in the target language", async () => {
+    readTrackLanguagePreference.mockResolvedValue({ target: "zh-Hans", source: null })
+    postMessageRequest.mockResolvedValue(response({ subtitles: [HUMAN, EN] }))
+    fetchMock.mockImplementation(async () =>
+      Response.json({ body: [{ from: 0, to: 1, content: " " }] }),
+    )
+
+    await expect(loadedLanguage()).resolves.toBe("zh-CN")
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
   it("falls back to the uploader's source-language subtitles", async () => {
     readTrackLanguagePreference.mockResolvedValue({ target: "zh-Hans", source: "en" })
     postMessageRequest.mockResolvedValue(response({ subtitles: [JA, EN] }))
@@ -156,6 +167,18 @@ describe("bilibiliTrackSource by language settings", () => {
     postMessageRequest.mockResolvedValue(response({ subtitles: [JA, AI_EN] }))
 
     await expect(loadedLanguage()).resolves.toBe("ja")
+  })
+
+  it("falls back to the usual pick when the language-picked file holds only blank lines", async () => {
+    readTrackLanguagePreference.mockResolvedValue({ target: "zh-Hans", source: null })
+    postMessageRequest.mockResolvedValue(response({ subtitles: [EN, HUMAN] }))
+    fetchMock.mockImplementation(async (url) =>
+      (url instanceof Request ? url.url : url.toString()).includes("zh.json")
+        ? Response.json({ body: [{ from: 0, to: 1, content: " " }] })
+        : Response.json(FILE),
+    )
+
+    await expect(loadedLanguage()).resolves.toBe("en-US")
   })
 
   it("keeps the usual pick while the setting is off", async () => {

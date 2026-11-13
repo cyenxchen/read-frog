@@ -992,6 +992,27 @@ describe("youtube track picked by language settings", () => {
     expect(lang).toBe("ja")
   })
 
+  // A speech-recognition track can hold nothing but "[音乐]", which the noise filter removes.
+  it("falls back to the usual track when the language-picked one has no lines", async () => {
+    settings(true)
+    const en = track("en", ".en")
+    const fetcher = new YoutubeSubtitlesFetcher()
+    vi.spyOn(fetcher as any, "requestPlayerData").mockResolvedValue({
+      success: true,
+      data: playerDataWith([en, track("zh", "a.zh", "asr")], en),
+    })
+    vi.spyOn(fetcher as any, "fetchWithRetry").mockImplementation(async (url) =>
+      new URL(url as string).searchParams.get("lang") === "zh" ? [] : [{ tStartMs: 0 }],
+    )
+    vi.spyOn(fetcher as any, "processRawEvents").mockImplementation(async (events) =>
+      (events as unknown[]).length ? [fragment] : [],
+    )
+
+    await expect(fetcher.fetch()).resolves.toEqual([fragment])
+    expect(fetcher.getSourceLanguage()).toBe("en")
+    await expect(fetcher.shouldUseSameTrack()).resolves.toBe(true)
+  })
+
   it("treats the language-picked track as the same track on the next poll", async () => {
     settings(true)
     const en = track("en", ".en")

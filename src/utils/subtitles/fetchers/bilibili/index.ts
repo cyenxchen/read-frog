@@ -91,12 +91,22 @@ async function loadTrack(partId: string): Promise<SubtitlesTrack> {
   if (!response.subtitles) throw new TrackFileNotLoadedError()
 
   // Bilibili also sends an empty list to a signed-out viewer; signing in is theirs to do.
-  const subtitle = pickSubtitle(response.subtitles, await readTrackLanguagePreference())
-  if (!subtitle) throw new NoSubtitlesError()
+  const usual = pickSubtitle(response.subtitles, null)
+  if (!usual) throw new NoSubtitlesError()
+
+  const byLanguage = pickSubtitle(response.subtitles, await readTrackLanguagePreference())
+  // Each pick parses the list afresh, so the same entry is told apart by its file.
+  if (byLanguage && byLanguage.subtitle_url !== usual.subtitle_url) {
+    const fragments = await downloadFragments(byLanguage)
+    // A file of blank lines would leave the part without subtitles; the usual pick still works.
+    if (fragments.some((fragment) => fragment.text.trim())) {
+      return { language: byLanguage.lan.replace(/^ai-/, ""), fragments }
+    }
+  }
 
   return {
-    language: subtitle.lan.replace(/^ai-/, ""),
-    fragments: await downloadFragments(subtitle),
+    language: usual.lan.replace(/^ai-/, ""),
+    fragments: await downloadFragments(usual),
   }
 }
 

@@ -1,7 +1,7 @@
 import type { SubtitlesFragment } from "../../types"
 import type { SubtitlesFetcher } from "../types"
 import type { CaptionTrack, PlayerData, YoutubeTimedText } from "./types"
-import type { TrackLanguagePreference } from "@/utils/subtitles/track-language"
+import type { TrackLanguageInfo, TrackLanguagePreference } from "@/utils/subtitles/track-language"
 import { getLocalConfig } from "@/utils/config/storage"
 import {
   ENSURE_SUBTITLES_REQUEST_TYPE,
@@ -43,6 +43,10 @@ import { extractPotToken } from "./pot-token"
 import { youtubeSubtitlesResponseSchema } from "./types"
 import { buildSubtitleUrl } from "./url-builder"
 
+function describeLanguageOf(track: CaptionTrack): TrackLanguageInfo {
+  return { locale: track.languageCode, kind: track.kind === "asr" ? "asr" : "human" }
+}
+
 function hasSelectedTrack(playerData: PlayerData): boolean {
   return Boolean(playerData.selectedTrackVssId || playerData.selectedTrackLanguageCode)
 }
@@ -75,6 +79,8 @@ export class YoutubeSubtitlesFetcher implements SubtitlesFetcher {
   private lookupGeneration = 0
   // Read once per fetch or track check, so every track pick in it, the hash included, agrees.
   private languagePreference: TrackLanguagePreference | null = null
+  // Tracks picked by language that held no lines, by vssId; not picked by language again.
+  private emptyLanguageTracks = new Set<string>()
 
   async fetch(): Promise<SubtitlesFragment[]> {
     const videoId = getYoutubeVideoId()
@@ -107,7 +113,23 @@ export class YoutubeSubtitlesFetcher implements SubtitlesFetcher {
     this.subtitles = await this.processRawEvents(events)
     this.cachedTrackHash = this.buildTrackHash(videoId, resolvedTrack)
 
+    // A track picked by language that holds no lines (a speech-recognition track of nothing but
+    // "[音乐]") must not leave the video without subtitles: skip it and pick again. Each retry
+    // skips one more track, so this ends.
+    if (
+      this.subtitles.length === 0 &&
+      this.matchesLanguagePreference(resolvedTrack) &&
+      !this.emptyLanguageTracks.has(resolvedTrack.vssId)
+    ) {
+      this.emptyLanguageTracks.add(resolvedTrack.vssId)
+      return this.fetch()
+    }
+
     return this.subtitles
+  }
+
+  private matchesLanguagePreference(track: CaptionTrack): boolean {
+    return pickByLanguage([track], this.languagePreference, describeLanguageOf) !== null
   }
 
   getSourceLanguage(): string {
@@ -123,6 +145,7 @@ export class YoutubeSubtitlesFetcher implements SubtitlesFetcher {
     this.sourceLanguage = ""
     this.cachedTrackHash = null
     this.preSegmented = false
+    this.emptyLanguageTracks.clear()
     this.lookupGeneration++
   }
 
@@ -398,13 +421,16 @@ export class YoutubeSubtitlesFetcher implements SubtitlesFetcher {
 
     if (tracks.length === 0) return null
 
-    const byLanguage = pickByLanguage(tracks, this.languagePreference, (t) => ({
-      locale: t.languageCode,
-      kind: t.kind === "asr" ? "asr" : "human",
-      selected: selectedTrackVssId
-        ? t.vssId === selectedTrackVssId
-        : t.languageCode === selectedTrackLanguageCode,
-    }))
+    const byLanguage = pickByLanguage(
+      tracks.filter((t) => !this.emptyLanguageTracks.has(t.vssId)),
+      this.languagePreference,
+      (t) => ({
+        ...describeLanguageOf(t),
+        selected: selectedTrackVssId
+          ? t.vssId === selectedTrackVssId
+          : t.languageCode === selectedTrackLanguageCode,
+      }),
+    )
     if (byLanguage) return byLanguage
 
     // Priority 1: User's selected track in YouTube player
