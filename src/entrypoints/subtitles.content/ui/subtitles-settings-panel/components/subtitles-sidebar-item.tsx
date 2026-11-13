@@ -1,6 +1,7 @@
 import { IconBook, IconLoader2 } from "@tabler/icons-react"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useRef, useState } from "react"
+import { MISSING_SUBTITLES_MESSAGE_KEY } from "@/utils/account-features/ui-policy" // fork:account-off
 import { i18n } from "@/utils/i18n"
 import { OverlaySubtitlesError } from "@/utils/subtitles/errors"
 import { showAnchoredSubtitlesToast } from "@/utils/subtitles/toast"
@@ -68,7 +69,7 @@ export function SubtitlesSidebarItem() {
       const hasSubtitles = await hasSubtitlesAvailable()
       if (!isCurrent()) return
       if (!hasSubtitles) {
-        showAnchoredSubtitlesToast(i18n.t("subtitles.sidebar.needsSubtitles"), anchor.current)
+        showAnchoredSubtitlesToast(i18n.t(MISSING_SUBTITLES_MESSAGE_KEY), anchor.current) // fork:account-off
         return
       }
       openPanel()

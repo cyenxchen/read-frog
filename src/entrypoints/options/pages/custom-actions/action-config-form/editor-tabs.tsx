@@ -4,6 +4,7 @@ import { useSelector } from "@tanstack/react-store"
 import { useAtom } from "jotai"
 import { useMemo, useRef } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/base-ui/tabs"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { i18n } from "@/utils/i18n"
 import { CUSTOM_ACTION_NOTEBASE_SECTION_ID } from "@/utils/navigation"
 import { sanitizeCustomActionNotebaseConnection } from "@/utils/notebase/connection"
@@ -89,6 +90,8 @@ export function ActionEditorTabs({
       }
     })
   }
+
+  if (!ACCOUNT_FEATURES_ENABLED) return <>{config}</> // fork:account-off
 
   return (
     <Tabs value={tab} onValueChange={handleValueChange} className="gap-4">

@@ -1,5 +1,6 @@
 import type { HostedAiStatus } from "@/utils/hosted-ai/types"
 import { useQuery } from "@tanstack/react-query"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { authClient } from "@/utils/auth/auth-client"
 import { orpc } from "@/utils/orpc/client"
 
@@ -32,7 +33,7 @@ export function useHostedAiStatus(options: { enabled?: boolean } = {}): HostedAi
       // the entry per user (suffixing keeps orpc.hostedAi.key() invalidation
       // prefix-matching intact).
       queryKey: [...orpc.hostedAi.status.queryKey({ input: {} }), session?.user?.id ?? "guest"],
-      enabled: (options.enabled ?? true) && !isSessionPending,
+      enabled: ACCOUNT_FEATURES_ENABLED && (options.enabled ?? true) && !isSessionPending, // fork:account-off
       retry: false,
       staleTime: 60_000,
       meta: { suppressToast: true },

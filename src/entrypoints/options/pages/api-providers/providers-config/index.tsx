@@ -15,6 +15,7 @@ import { Dialog, DialogTrigger } from "@/components/ui/base-ui/dialog"
 import { anchoredToastManager } from "@/components/ui/base-ui/toast"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/base-ui/tooltip"
 import { isAPIProvider, isAPIProviderConfig } from "@/types/config/provider"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { configAtom, configFieldsAtomMap } from "@/utils/atoms/config"
 import { patchProviderConfigAtom } from "@/utils/atoms/entity-config"
 import { getAPIProvidersConfig, getProviderConfigById } from "@/utils/config/helpers"
@@ -127,7 +128,8 @@ function useRequestedProvider() {
 export function ProvidersConfig() {
   const selectedProviderId = useAtomValue(selectedProviderIdAtom)
   useRequestedProvider()
-  const editor = isBuiltInAiProviderId(selectedProviderId) ? (
+  const isBuiltIn = ACCOUNT_FEATURES_ENABLED && isBuiltInAiProviderId(selectedProviderId) // fork:account-off
+  const editor = isBuiltIn ? (
     <BuiltInProviderPanel key={selectedProviderId} providerId={selectedProviderId} />
   ) : (
     <ProviderConfigForm key={selectedProviderId} />
@@ -214,7 +216,8 @@ function ProviderCardList() {
           renderItem={(providerConfig) => <ProviderCard providerConfig={providerConfig} />}
         />
       </EntityListRail>
-      <BuiltInProviderSection />
+      {/* // fork:account-off */}
+      {ACCOUNT_FEATURES_ENABLED && <BuiltInProviderSection />}
     </div>
   )
 }

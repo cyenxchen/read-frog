@@ -1,6 +1,7 @@
 name: Read Frog
-extName: "Read Frog - Dịch AI và thẻ ghi nhớ"
-extDescription: "Dịch song ngữ bằng AI cho trang web và phụ đề YouTube, Netflix, X. Lưu từ mới và ôn tập bằng thẻ ghi nhớ."
+# fork:account-off
+extName: "Read Frog - Dịch AI"
+extDescription: "Dịch song ngữ bằng AI cho trang web và phụ đề YouTube, Netflix, X."
 uninstallSurveyUrl: https://tally.so/r/nPK6Ob
 account:
   login: Đăng nhập

@@ -1,6 +1,7 @@
 name: Read Frog
-extName: "Read Frog - AI Translation & Flashcards"
-extDescription: "Bilingual AI translation for web pages and YouTube, Netflix and X subtitles. Save new words and review them as flashcards."
+# fork:account-off
+extName: "Read Frog - AI Translation"
+extDescription: "Bilingual AI translation for web pages and YouTube, Netflix and X subtitles."
 uninstallSurveyUrl: https://tally.so/r/nPK6Ob
 account:
   login: Log in

@@ -5,6 +5,7 @@ import type { ValidatedNoteSuggestion } from "@/utils/note-suggestion/types"
 import { useAtomValue } from "jotai"
 import { useCallback, useRef, useState } from "react"
 import { isAbortError } from "@/components/ui/selection-popover/inline-error"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { classifyResolvedProvider } from "@/utils/analytics-provider"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { streamBackgroundNoteSuggestion } from "@/utils/content-script/background-stream-client"
@@ -108,6 +109,7 @@ export function useNoteSuggestion() {
   }, [])
 
   const maybeFire = useCallback((input: NoteSuggestionFireInput) => {
+    if (!ACCOUNT_FEATURES_ENABLED) return // fork:account-off
     const config = latestRef.current
     if (!config.noteSuggestion.enabled) {
       return

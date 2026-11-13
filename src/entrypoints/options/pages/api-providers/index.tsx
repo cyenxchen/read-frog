@@ -1,3 +1,4 @@
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { i18n } from "@/utils/i18n"
 import { PageLayout } from "../../components/page-layout"
 import { AIContentAwareConfig } from "./ai-content-aware"
@@ -17,7 +18,8 @@ export function ApiProvidersPage() {
       <FeatureProvidersConfig />
       <LanguageDetectionConfig />
       <AIContentAwareConfig />
-      <BuiltInAiUsageConfig />
+      {/* // fork:account-off */}
+      {ACCOUNT_FEATURES_ENABLED && <BuiltInAiUsageConfig />}
     </PageLayout>
   )
 }

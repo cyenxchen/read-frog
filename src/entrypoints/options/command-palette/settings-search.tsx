@@ -10,6 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/base-ui/command"
+import { HIDDEN_ACCOUNT_SECTION_IDS } from "@/utils/account-features/ui-policy" // fork:account-off
 import { i18n } from "@/utils/i18n"
 import { commandPaletteOpenAtom } from "./atoms"
 import { SEARCH_ITEMS } from "./search-items"
@@ -43,6 +44,7 @@ export function SettingsSearch() {
   const groupedItems = useMemo(() => {
     const groups = new Map<(typeof SEARCH_ITEMS)[number]["pageKey"], typeof SEARCH_ITEMS>()
     for (const item of SEARCH_ITEMS) {
+      if (HIDDEN_ACCOUNT_SECTION_IDS.has(item.sectionId)) continue // fork:account-off
       const existing = groups.get(item.pageKey)
       if (existing) {
         existing.push(item)

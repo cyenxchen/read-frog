@@ -1,5 +1,6 @@
 import { useAtom } from "jotai"
 import { Switch } from "@/components/ui/base-ui/switch"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { i18n } from "@/utils/i18n"
 import { ConfigItem } from "../../../components/config-item"
@@ -57,7 +58,8 @@ export function ActionsSection() {
           onCheckedChange={(checked) => setFeatureEnabled("speak", checked)}
         />
       </ConfigItem>
-      <NoteSuggestionItems />
+      {/* // fork:account-off */}
+      {ACCOUNT_FEATURES_ENABLED && <NoteSuggestionItems />}
     </ConfigSection>
   )
 }
