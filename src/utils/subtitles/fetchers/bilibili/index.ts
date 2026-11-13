@@ -1,4 +1,5 @@
 import type { SubtitlesTrack, SubtitlesTrackSource } from "../track"
+import type { TrackLanguagePreference } from "@/utils/subtitles/track-language"
 import type { SubtitlesFragment } from "@/utils/subtitles/types"
 import { z } from "zod"
 import {
@@ -12,6 +13,8 @@ import {
   OverlaySubtitlesError,
   TrackFileNotLoadedError,
 } from "@/utils/subtitles/errors"
+import { readTrackLanguagePreference } from "@/utils/subtitles/read-track-language-preference"
+import { pickByLanguage } from "@/utils/subtitles/track-language"
 import { getBilibiliPartId } from "@/utils/subtitles/video-id"
 import { fetchWithRetry, readJson } from "../fetch-with-retry"
 import { postMessageRequest } from "../post-message-request"
@@ -43,13 +46,27 @@ async function requestBilibiliSubtitles(partId: string): Promise<BilibiliSubtitl
   return parsed.success ? parsed.data : null
 }
 
-// Bilibili names its AI subtitles `ai-<lang>`; the uploader's own are the better source.
-function pickSubtitle(subtitles: unknown[]): SubtitleEntry | null {
+const isAiSubtitle = (entry: SubtitleEntry) => entry.lan.startsWith("ai-")
+
+// Bilibili names its AI subtitles `ai-<lang>`; the uploader's own are the better source. By
+// language, only the uploader's count: an AI one may be a machine translation.
+function pickSubtitle(
+  subtitles: unknown[],
+  preference: TrackLanguagePreference | null,
+): SubtitleEntry | null {
   const entries = subtitles.flatMap((subtitle) => {
     const parsed = subtitleEntrySchema.safeParse(subtitle)
     return parsed.success ? [parsed.data] : []
   })
-  return entries.find((entry) => !entry.lan.startsWith("ai-")) ?? entries[0] ?? null
+  return (
+    pickByLanguage(entries, preference, (entry) => ({
+      locale: entry.lan,
+      kind: isAiSubtitle(entry) ? "machine" : "human",
+    })) ??
+    entries.find((entry) => !isAiSubtitle(entry)) ??
+    entries[0] ??
+    null
+  )
 }
 
 async function downloadFragments(subtitle: SubtitleEntry): Promise<SubtitlesFragment[]> {
@@ -74,12 +91,22 @@ async function loadTrack(partId: string): Promise<SubtitlesTrack> {
   if (!response.subtitles) throw new TrackFileNotLoadedError()
 
   // Bilibili also sends an empty list to a signed-out viewer; signing in is theirs to do.
-  const subtitle = pickSubtitle(response.subtitles)
-  if (!subtitle) throw new NoSubtitlesError()
+  const usual = pickSubtitle(response.subtitles, null)
+  if (!usual) throw new NoSubtitlesError()
+
+  const byLanguage = pickSubtitle(response.subtitles, await readTrackLanguagePreference())
+  // Each pick parses the list afresh, so the same entry is told apart by its file.
+  if (byLanguage && byLanguage.subtitle_url !== usual.subtitle_url) {
+    const fragments = await downloadFragments(byLanguage)
+    // A file of blank lines would leave the part without subtitles; the usual pick still works.
+    if (fragments.some((fragment) => fragment.text.trim())) {
+      return { language: byLanguage.lan.replace(/^ai-/, ""), fragments }
+    }
+  }
 
   return {
-    language: subtitle.lan.replace(/^ai-/, ""),
-    fragments: await downloadFragments(subtitle),
+    language: usual.lan.replace(/^ai-/, ""),
+    fragments: await downloadFragments(usual),
   }
 }
 

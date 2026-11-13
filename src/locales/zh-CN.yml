@@ -1448,6 +1448,9 @@ options:
       pauseOnHover:
         title: 悬停暂停
         description: 鼠标在字幕上停留片刻时暂停视频，移开后继续播放。点击单词查询时始终会暂停。
+      preferLanguageMatchedTrack:
+        title: "按语言选择字幕"
+        description: "视频已有目标语言字幕时直接使用，不再翻译；没有时优先翻译源语言字幕。双语模式下，直接使用的目标语言字幕只显示一行。"
     aiQuota:
       title: AI 字幕额度
       description: AI 利用语音转文字技术获取任何视频的准确字幕

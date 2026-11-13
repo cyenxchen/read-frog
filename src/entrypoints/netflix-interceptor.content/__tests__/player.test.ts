@@ -19,11 +19,15 @@ const TTML = `<?xml version="1.0" encoding="utf-8"?>
 <body><div><p begin="10000000t" end="20000000t">Hello there.</p></div></body>
 </tt>`
 
-const track = (trackId: string, bcp47: string | null, flags: Partial<{ none: boolean }> = {}) => ({
+const track = (
+  trackId: string,
+  bcp47: string | null,
+  flags: Partial<{ none: boolean; forced: boolean }> = {},
+) => ({
   trackId,
   bcp47,
   isNoneTrack: !!flags.none,
-  isForcedNarrative: false,
+  isForcedNarrative: !!flags.forced,
 })
 
 const OFF = track("off", null, { none: true })
@@ -32,12 +36,15 @@ const EN = track("en", "en")
 
 let current = OFF
 let playerReady = true
+let tracks = [OFF, ZH, EN]
+// A new title per test: Read Frog switches a title's track by language only once.
+let movieId = 0
 
 const player = {
-  getMovieId: () => 1,
+  getMovieId: () => movieId,
   getAudioTrack: () => ({ bcp47: "zh-CN" }),
   getTimedTextTrack: () => current,
-  getTimedTextTrackList: () => (playerReady ? [OFF, ZH, EN] : []),
+  getTimedTextTrackList: () => (playerReady ? tracks : []),
   setTimedTextTrack: (next: typeof current) => {
     current = next
   },
@@ -64,6 +71,8 @@ beforeAll(() => {
 beforeEach(() => {
   current = OFF
   playerReady = true
+  tracks = [OFF, ZH, EN]
+  movieId++
   capture.ttml = TTML
   // jsdom posts messages without an origin, and both ends of the bridge check it.
   vi.spyOn(window, "postMessage").mockImplementation((data: unknown) => {
@@ -78,7 +87,10 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-function request(action: "state" | "load" | "restore"): Promise<any> {
+function request(
+  action: "state" | "load" | "restore",
+  preferredTrackId?: string | null,
+): Promise<any> {
   return new Promise((resolve) => {
     const requestId = Math.random().toString()
     const handler = (event: MessageEvent) => {
@@ -93,7 +105,7 @@ function request(action: "state" | "load" | "restore"): Promise<any> {
     window.addEventListener("message", handler)
     window.dispatchEvent(
       new MessageEvent("message", {
-        data: { type: NETFLIX_SUBTITLES_REQUEST_TYPE, requestId, action },
+        data: { type: NETFLIX_SUBTITLES_REQUEST_TYPE, requestId, action, preferredTrackId },
         origin: window.location.origin,
       }),
     )
@@ -139,6 +151,62 @@ describe("Netflix player requests", () => {
     await vi.advanceTimersByTimeAsync(POST_MESSAGE_TIMEOUT_MS)
 
     expect(answeredAfterMs).toBeLessThan(POST_MESSAGE_TIMEOUT_MS)
+  })
+})
+
+describe("Netflix player requests for a track picked by language", () => {
+  const ZH_HANS = track("zh-Hans", "zh-Hans")
+
+  beforeEach(() => {
+    tracks = [OFF, ZH, EN, ZH_HANS]
+    current = EN
+  })
+
+  it("lists the tracks it can translate, for the content script to pick from", async () => {
+    await expect(request("state")).resolves.toMatchObject({
+      trackId: "en",
+      tracks: [
+        { trackId: "zh-Hant", bcp47: "zh-Hant" },
+        { trackId: "en", bcp47: "en" },
+        { trackId: "zh-Hans", bcp47: "zh-Hans" },
+      ],
+    })
+  })
+
+  it("switches to the picked track and names its language", async () => {
+    await expect(request("load", "zh-Hans")).resolves.toMatchObject({
+      trackId: "zh-Hans",
+      language: "zh-Hans",
+    })
+    expect(current).toBe(ZH_HANS)
+  })
+
+  it("puts the viewer's track back on restore and leaves it there on the next load", async () => {
+    await request("load", "zh-Hans")
+    await expect(request("restore")).resolves.toMatchObject({ trackId: "en" })
+    expect(current).toBe(EN)
+
+    // The track poll reloads after a restore; it must not switch the player back.
+    await expect(request("load", "zh-Hans")).resolves.toMatchObject({ trackId: "en" })
+    expect(current).toBe(EN)
+  })
+
+  it("keeps a track the viewer picks after Read Frog switched by language", async () => {
+    await request("load", "zh-Hans")
+    current = ZH
+
+    await expect(request("load", "zh-Hans")).resolves.toMatchObject({ trackId: "zh-Hant" })
+    expect(current).toBe(ZH)
+  })
+
+  it("never switches to a track it cannot translate", async () => {
+    tracks = [OFF, EN, track("forced", "zh-Hans", { forced: true })]
+
+    await expect(request("load", "forced")).resolves.toMatchObject({ trackId: "en" })
+  })
+
+  it("keeps the viewer's track without a pick", async () => {
+    await expect(request("load", null)).resolves.toMatchObject({ trackId: "en" })
   })
 })
 

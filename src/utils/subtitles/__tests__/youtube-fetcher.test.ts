@@ -899,3 +899,125 @@ describe("youtube subtitles fetcher", () => {
     ])
   })
 })
+
+describe("youtube track picked by language settings", () => {
+  const fragment = { text: "line", start: 0, end: 500 }
+  const track = (languageCode: string, vssId: string, kind?: string) => ({
+    baseUrl: `https://www.youtube.com/api/timedtext?v=test123&lang=${languageCode}${kind ? `&kind=${kind}` : ""}`,
+    languageCode,
+    vssId,
+    ...(kind ? { kind } : {}),
+  })
+
+  function playerDataWith(
+    captionTracks: ReturnType<typeof track>[],
+    selected: ReturnType<typeof track>,
+  ) {
+    return {
+      videoId: "test123",
+      captionTracks,
+      audioCaptionTracks: [],
+      device: null,
+      cver: null,
+      playerState: 1,
+      selectedTrackLanguageCode: selected.languageCode,
+      selectedTrackVssId: selected.vssId,
+      defaultCaptionTrackIndex: null,
+      cachedTimedtextUrl: null,
+      isLiveContent: false,
+    }
+  }
+
+  function settings(preferLanguageMatchedTrack: boolean, sourceCode = "auto") {
+    vi.spyOn(configStorage, "getLocalConfig").mockResolvedValue({
+      language: { sourceCode, targetCode: "zh-Hans" },
+      videoSubtitles: { aiSegmentation: false, preferLanguageMatchedTrack },
+    } as any)
+  }
+
+  async function fetchWith(playerData: ReturnType<typeof playerDataWith>) {
+    const fetcher = new YoutubeSubtitlesFetcher()
+    vi.spyOn(fetcher as any, "requestPlayerData").mockResolvedValue({
+      success: true,
+      data: playerData,
+    })
+    const fetchWithRetry = vi.spyOn(fetcher as any, "fetchWithRetry").mockResolvedValue([])
+    vi.spyOn(fetcher as any, "processRawEvents").mockResolvedValue([fragment])
+    await fetcher.fetch()
+    const url = new URL(fetchWithRetry.mock.calls[0]![0] as string)
+    return { fetcher, lang: url.searchParams.get("lang"), kind: url.searchParams.get("kind") }
+  }
+
+  beforeEach(() => {
+    setWatchLocation("test123")
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it("loads the target-language track instead of the one the player shows", async () => {
+    settings(true)
+    const en = track("en", ".en")
+    const { fetcher, lang } = await fetchWith(
+      playerDataWith([en, track("zh-Hans", ".zh-Hans")], en),
+    )
+
+    expect(lang).toBe("zh-Hans")
+    expect(fetcher.getSourceLanguage()).toBe("zh-Hans")
+  })
+
+  it("takes target-language speech recognition when there is nothing else in that language", async () => {
+    settings(true)
+    const en = track("en", ".en")
+    const { lang, kind } = await fetchWith(playerDataWith([en, track("zh", "a.zh", "asr")], en))
+
+    expect(lang).toBe("zh")
+    expect(kind).toBe("asr")
+  })
+
+  it("falls back to the source-language track when the target language is missing", async () => {
+    settings(true, "en")
+    const ja = track("ja", ".ja")
+    const { lang } = await fetchWith(playerDataWith([ja, track("en", ".en")], ja))
+
+    expect(lang).toBe("en")
+  })
+
+  it("keeps the player's track while the setting is off", async () => {
+    settings(false, "en")
+    const ja = track("ja", ".ja")
+    const { lang } = await fetchWith(playerDataWith([ja, track("zh-Hans", ".zh-Hans")], ja))
+
+    expect(lang).toBe("ja")
+  })
+
+  // A speech-recognition track can hold nothing but "[音乐]", which the noise filter removes.
+  it("falls back to the usual track when the language-picked one has no lines", async () => {
+    settings(true)
+    const en = track("en", ".en")
+    const fetcher = new YoutubeSubtitlesFetcher()
+    vi.spyOn(fetcher as any, "requestPlayerData").mockResolvedValue({
+      success: true,
+      data: playerDataWith([en, track("zh", "a.zh", "asr")], en),
+    })
+    vi.spyOn(fetcher as any, "fetchWithRetry").mockImplementation(async (url) =>
+      new URL(url as string).searchParams.get("lang") === "zh" ? [] : [{ tStartMs: 0 }],
+    )
+    vi.spyOn(fetcher as any, "processRawEvents").mockImplementation(async (events) =>
+      (events as unknown[]).length ? [fragment] : [],
+    )
+
+    await expect(fetcher.fetch()).resolves.toEqual([fragment])
+    expect(fetcher.getSourceLanguage()).toBe("en")
+    await expect(fetcher.shouldUseSameTrack()).resolves.toBe(true)
+  })
+
+  it("treats the language-picked track as the same track on the next poll", async () => {
+    settings(true)
+    const en = track("en", ".en")
+    const { fetcher } = await fetchWith(playerDataWith([en, track("zh-Hans", ".zh-Hans")], en))
+
+    await expect(fetcher.shouldUseSameTrack()).resolves.toBe(true)
+  })
+})

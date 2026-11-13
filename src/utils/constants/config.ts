@@ -328,6 +328,7 @@ export const DEFAULT_CONFIG: Config = {
     aiSegmentation: false,
     wordLookupActionId: BUILT_IN_DICTIONARY_ACTION_ID,
     pauseOnHover: false,
+    preferLanguageMatchedTrack: false,
     requestQueueConfig: {
       capacity: DEFAULT_REQUEST_CAPACITY,
       rate: DEFAULT_REQUEST_RATE,

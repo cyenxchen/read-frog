@@ -1,4 +1,5 @@
 import type { SubtitlesFetcher } from "../types"
+import type { TrackLanguagePreference } from "@/utils/subtitles/track-language"
 import type { SubtitlesFragment } from "@/utils/subtitles/types"
 import {
   TEXT_TRACK_CUE_POLL_INTERVAL_MS,
@@ -7,6 +8,8 @@ import {
 } from "@/utils/constants/subtitles"
 import { pollUntil } from "@/utils/poll"
 import { NoSubtitlesError, VideoNotFoundError } from "@/utils/subtitles/errors"
+import { readTrackLanguagePreference } from "@/utils/subtitles/read-track-language-preference"
+import { pickByLanguage } from "@/utils/subtitles/track-language"
 import { cuesToFragments } from "./cues"
 
 interface TextTrackFetcherOptions {
@@ -21,6 +24,8 @@ export class TextTrackFetcher implements SubtitlesFetcher {
   private subtitles: SubtitlesFragment[] = []
   private sourceLanguage = ""
   private cachedTrackHash: string | null = null
+  // Language-picked tracks that never got a cue; picked by language no more until cleanup.
+  private emptyLanguageTracks = new Set<string>()
   private playerModes = new Map<TextTrack, TextTrackMode>()
   private rehideTimer: ReturnType<typeof setTimeout> | null = null
   private watchedTracks: TextTrackList | null = null
@@ -42,11 +47,27 @@ export class TextTrackFetcher implements SubtitlesFetcher {
       throw new VideoNotFoundError()
     }
 
-    const track = this.selectTrack(video)
-    if (!track) {
-      throw new NoSubtitlesError()
+    const preference = await readTrackLanguagePreference()
+    const usual = this.selectTrack(video)
+    const byLanguage = this.selectTrackByLanguage(video, preference)
+    if (byLanguage && byLanguage !== usual) {
+      try {
+        return await this.loadTrack(byLanguage)
+      } catch (error) {
+        if (!(error instanceof NoSubtitlesError)) throw error
+        // A player may load cues only for the track it shows: the usual pick still works, and
+        // the empty track is skipped from now on so the track poll does not try it again.
+        this.emptyLanguageTracks.add(this.buildTrackHash(byLanguage))
+      }
     }
 
+    if (!usual) {
+      throw new NoSubtitlesError()
+    }
+    return this.loadTrack(usual)
+  }
+
+  private async loadTrack(track: TextTrack): Promise<SubtitlesFragment[]> {
     const trackHash = this.buildTrackHash(track)
     if (this.subtitles.length > 0 && this.cachedTrackHash === trackHash) {
       return this.subtitles
@@ -72,9 +93,10 @@ export class TextTrackFetcher implements SubtitlesFetcher {
   // A track can be there and never get a cue, so checking loads the cues and `fetch` reuses them.
   // A missing video is not a captionless one, so that error goes to the caller.
   async hasAvailableSubtitles(): Promise<boolean> {
+    const preference = await readTrackLanguagePreference()
     // The reader can pick another track while the cues load; the answer is for the one picked.
     for (;;) {
-      const picked = this.pickedTrackHash()
+      const picked = this.pickedTrackHash(preference)
       const found = await this.fetch().then(
         () => true,
         (error: unknown) => {
@@ -82,16 +104,14 @@ export class TextTrackFetcher implements SubtitlesFetcher {
           throw error
         },
       )
-      if (this.pickedTrackHash() === picked) return found
+      if (this.pickedTrackHash(preference) === picked) return found
     }
   }
 
   async shouldUseSameTrack(): Promise<boolean> {
-    return (
-      this.subtitles.length > 0 &&
-      !!this.cachedTrackHash &&
-      this.pickedTrackHash() === this.cachedTrackHash
-    )
+    if (this.subtitles.length === 0 || !this.cachedTrackHash) return false
+    const preference = await readTrackLanguagePreference()
+    return this.pickedTrackHash(preference) === this.cachedTrackHash
   }
 
   hideNativeSubtitles(): void {
@@ -122,23 +142,50 @@ export class TextTrackFetcher implements SubtitlesFetcher {
     this.subtitles = []
     this.sourceLanguage = ""
     this.cachedTrackHash = null
+    this.emptyLanguageTracks.clear()
   }
 
   private buildTrackHash(track: TextTrack): string {
     return [this.options.getVideoId() ?? "", track.language, track.label, track.kind].join(":")
   }
 
-  private pickedTrackHash(): string | null {
+  // The same pick `fetch` makes, so a track poll does not see a change where there is none.
+  private pickedTrackHash(preference: TrackLanguagePreference | null): string | null {
     const video = this.options.resolveVideo()
-    const track = video ? this.selectTrack(video) : null
+    const track = video
+      ? (this.selectTrackByLanguage(video, preference) ?? this.selectTrack(video))
+      : null
     return track ? this.buildTrackHash(track) : null
   }
 
-  private selectTrack(video: HTMLVideoElement): TextTrack | null {
+  private candidateTracks(video: HTMLVideoElement): TextTrack[] {
     const { isSourceTrack } = this.options
-    const candidates = Array.from(video.textTracks).filter(
+    return Array.from(video.textTracks).filter(
       (track) => SUBTITLE_KINDS.has(track.kind) && (!isSourceTrack || isSourceTrack(track)),
     )
+  }
+
+  private isPlayerShowing(track: TextTrack): boolean {
+    // A track the player shows is still its pick once we hide it under our overlay.
+    return (this.playerModes.get(track) ?? track.mode) === "showing"
+  }
+
+  private selectTrackByLanguage(
+    video: HTMLVideoElement,
+    preference: TrackLanguagePreference | null,
+  ): TextTrack | null {
+    const tracks = this.candidateTracks(video).filter(
+      (track) => !this.emptyLanguageTracks.has(this.buildTrackHash(track)),
+    )
+    return pickByLanguage(tracks, preference, (track) => ({
+      locale: track.language,
+      kind: "human",
+      selected: this.isPlayerShowing(track),
+    }))
+  }
+
+  private selectTrack(video: HTMLVideoElement): TextTrack | null {
+    const candidates = this.candidateTracks(video)
     return (
       // A track the player shows is still its pick once we hide it under our overlay.
       candidates.find((track) => (this.playerModes.get(track) ?? track.mode) === "showing") ??

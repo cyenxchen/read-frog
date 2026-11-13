@@ -1,3 +1,4 @@
+import type { TrackLanguagePreference } from "@/utils/subtitles/track-language"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   TEXT_TRACK_CUE_POLL_INTERVAL_MS,
@@ -7,6 +8,13 @@ import {
 import { TextTrackFetcher } from ".."
 
 vi.mock("@/utils/i18n", () => ({ i18n: { t: (key: string) => key } }))
+
+const readTrackLanguagePreference = vi.fn<() => Promise<TrackLanguagePreference | null>>(
+  async () => null,
+)
+vi.mock("@/utils/subtitles/read-track-language-preference", () => ({
+  readTrackLanguagePreference: () => readTrackLanguagePreference(),
+}))
 
 class FakeTrack extends EventTarget {
   cues: ArrayLike<TextTrackCue> | null = null
@@ -293,5 +301,55 @@ describe("TextTrackFetcher", () => {
     await expect(createFetcher(null).hasAvailableSubtitles()).rejects.toThrow(
       "subtitles.errors.videoNotFound",
     )
+  })
+})
+
+describe("TextTrackFetcher by language settings", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    readTrackLanguagePreference.mockResolvedValue({ target: "zh-Hans", source: null })
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    readTrackLanguagePreference.mockResolvedValue(null)
+  })
+
+  it("loads the target-language track instead of the showing one", async () => {
+    const english = new FakeTrack("subtitles", "English", "en", "showing")
+    english.loadCues("hello")
+    const chinese = new FakeTrack("subtitles", "中文", "zh", "disabled")
+    chinese.loadCues("你好")
+    const fetcher = createFetcher(videoWith(english, chinese))
+
+    await expect(fetcher.fetch()).resolves.toEqual([{ text: "你好", start: 0, end: 1000 }])
+    expect(fetcher.getSourceLanguage()).toBe("zh")
+    expect(chinese.mode).toBe("hidden")
+    await expect(fetcher.shouldUseSameTrack()).resolves.toBe(true)
+  })
+
+  it("keeps the usual pick for tracks that name no language", async () => {
+    const showing = new FakeTrack("subtitles", "A", "", "showing")
+    showing.loadCues("shown")
+    const other = new FakeTrack("subtitles", "B", "", "disabled")
+    other.loadCues("other")
+
+    await expect(createFetcher(videoWith(showing, other)).fetch()).resolves.toEqual([
+      { text: "shown", start: 0, end: 1000 },
+    ])
+  })
+
+  it("falls back to the usual pick when the target-language track never gets a cue", async () => {
+    const english = new FakeTrack("subtitles", "English", "en", "showing")
+    english.loadCues("hello")
+    const chinese = new FakeTrack("subtitles", "中文", "zh", "disabled")
+    const fetcher = createFetcher(videoWith(english, chinese))
+
+    const pending = fetcher.fetch()
+    await vi.advanceTimersByTimeAsync(TEXT_TRACK_CUE_WAIT_TIMEOUT_MS)
+
+    await expect(pending).resolves.toEqual([{ text: "hello", start: 0, end: 1000 }])
+    expect(fetcher.getSourceLanguage()).toBe("en")
+    // The empty track is not tried again on every track poll.
+    await expect(fetcher.shouldUseSameTrack()).resolves.toBe(true)
   })
 })

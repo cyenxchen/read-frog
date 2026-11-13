@@ -81,6 +81,10 @@ export const videoSubtitlesSchema = z.object({
   // Whether resting the pointer on the subtitles pauses the video. `.default()` is
   // load-bearing for the same reason as above, until the v117 migration runs.
   pauseOnHover: z.boolean().default(false),
+  // Pick the subtitle track by the reader's language settings: one already in the target
+  // language is shown untranslated, else a source-language one is translated. `.default()` is
+  // load-bearing, as above, until the v124 migration runs.
+  preferLanguageMatchedTrack: z.boolean().default(false),
   requestQueueConfig: requestQueueConfigSchema,
   batchQueueConfig: batchQueueConfigSchema,
   customPromptsConfig: subtitleCustomPromptsConfigSchema,

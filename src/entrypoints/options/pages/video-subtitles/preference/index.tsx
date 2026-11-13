@@ -55,6 +55,20 @@ export function PreferenceSection() {
         description={i18n.t("options.videoSubtitles.preference.autoStart.description")}
       />
       <ConfigItem
+        id="subtitles-prefer-language-matched-track"
+        title={i18n.t("options.videoSubtitles.preference.preferLanguageMatchedTrack.title")}
+        description={i18n.t(
+          "options.videoSubtitles.preference.preferLanguageMatchedTrack.description",
+        )}
+      >
+        <Switch
+          checked={videoSubtitlesConfig.preferLanguageMatchedTrack}
+          onCheckedChange={(preferLanguageMatchedTrack) => {
+            void setVideoSubtitlesConfig({ preferLanguageMatchedTrack })
+          }}
+        />
+      </ConfigItem>
+      <ConfigItem
         id="subtitles-ai-segmentation"
         title={i18n.t("options.videoSubtitles.preference.aiSegmentation.title")}
         description={i18n.t("options.videoSubtitles.preference.aiSegmentation.description")}

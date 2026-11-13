@@ -29,6 +29,9 @@ interface NetflixPlayer {
 }
 
 let replacedTrack: { movieId: number; track: TimedTextTrack; pickedTrackId: string } | null = null
+// The content script picks a track by language from the list this page sends it; matching
+// languages here would pull the language tables into every Netflix page.
+let languagePickedMovieId: number | null = null
 
 // Each wait gets whatever time is left before the request's deadline.
 function untilDeadline(deadline: number) {
@@ -41,6 +44,7 @@ function emptyResponse(requestId: string): NetflixSubtitlesResponse {
     requestId,
     movieId: null,
     trackId: null,
+    language: null,
     translatable: false,
     ttml: null,
   }
@@ -68,8 +72,38 @@ function primaryLanguage(language: string | null | undefined): string {
   return language?.split("-")[0]?.toLowerCase() ?? ""
 }
 
-function ensureTranslatableTrack(player: NetflixPlayer): TimedTextTrack | null {
+function switchTrack(player: NetflixPlayer, current: TimedTextTrack | null, next: TimedTextTrack) {
+  if (current) {
+    replacedTrack = { movieId: player.getMovieId(), track: current, pickedTrackId: next.trackId }
+  }
+  player.setTimedTextTrack(next)
+}
+
+// Once per title: the track poll reloads after a restore or a track the viewer picks, and
+// switching again then would undo the viewer's choice.
+function switchToPickedTrackOnce(
+  player: NetflixPlayer,
+  current: TimedTextTrack | null,
+  preferredTrackId: string | null,
+): TimedTextTrack | null {
+  const movieId = player.getMovieId()
+  if (!preferredTrackId || languagePickedMovieId === movieId) return null
+  languagePickedMovieId = movieId
+
+  const next = player
+    .getTimedTextTrackList()
+    .find((track) => isTranslatable(track) && track.trackId === preferredTrackId)
+  if (next && next.trackId !== current?.trackId) switchTrack(player, current, next)
+  return next ?? null
+}
+
+function ensureTranslatableTrack(
+  player: NetflixPlayer,
+  preferredTrackId: string | null,
+): TimedTextTrack | null {
   const current = player.getTimedTextTrack()
+  const byLanguage = switchToPickedTrackOnce(player, current, preferredTrackId)
+  if (byLanguage) return byLanguage
   if (isTranslatable(current)) return current
 
   const tracks = player.getTimedTextTrackList().filter(isTranslatable)
@@ -80,16 +114,14 @@ function ensureTranslatableTrack(player: NetflixPlayer): TimedTextTrack | null {
     tracks[0]
   if (!next) return null
 
-  if (current) {
-    replacedTrack = { movieId: player.getMovieId(), track: current, pickedTrackId: next.trackId }
-  }
-  player.setTimedTextTrack(next)
+  switchTrack(player, current, next)
   return next
 }
 
 async function handleRequest(
   requestId: string,
   action: NetflixSubtitlesAction,
+  preferredTrackId: string | null,
 ): Promise<NetflixSubtitlesResponse> {
   const response = emptyResponse(requestId)
   // A load shares one deadline between the player and its subtitle file, so the content
@@ -111,9 +143,17 @@ async function handleRequest(
     }
   }
 
-  const track = action === "load" ? ensureTranslatableTrack(player) : player.getTimedTextTrack()
+  const track =
+    action === "load"
+      ? ensureTranslatableTrack(player, preferredTrackId)
+      : player.getTimedTextTrack()
   response.movieId = movieId
   response.trackId = track?.trackId ?? null
+  response.language = track?.bcp47 ?? null
+  response.tracks = player
+    .getTimedTextTrackList()
+    .filter(isTranslatable)
+    .map(({ trackId, bcp47 }) => ({ trackId, bcp47 }))
   response.translatable = isTranslatable(track)
   if (action === "load" && track && response.translatable) {
     response.ttml = await pollUntil(
@@ -133,8 +173,10 @@ export function listenForSubtitlesRequests(): void {
       return
     }
     const { requestId, action } = event.data
+    const preferredTrackId =
+      typeof event.data.preferredTrackId === "string" ? event.data.preferredTrackId : null
     // Answer even when reading the player throws, so the content script is not left waiting.
-    void handleRequest(requestId, action)
+    void handleRequest(requestId, action, preferredTrackId)
       .catch(() => emptyResponse(requestId))
       .then((response) => window.postMessage(response, window.location.origin))
   })
