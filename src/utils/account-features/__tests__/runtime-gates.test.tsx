@@ -23,9 +23,9 @@ import {
 } from "@/entrypoints/subtitles.content/atoms"
 import { createYoutubeSubtitlesAdapter } from "@/entrypoints/subtitles.content/platforms/youtube"
 import { SubtitlesSidebarItem } from "@/entrypoints/subtitles.content/ui/subtitles-settings-panel/components/subtitles-sidebar-item"
-import { isLLMProviderConfig } from "@/types/config/provider"
 import { configAtom } from "@/utils/atoms/config"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
+import { DEFAULT_PROVIDER_CONFIG } from "@/utils/constants/providers"
 import { getSelectionToolbarActions } from "@/utils/custom-actions"
 import { getGuideDictionaryNotebaseState } from "@/utils/guide/dictionary-notebase"
 
@@ -87,7 +87,7 @@ function wrapper({ children }: { children: ReactNode }) {
 
 it("note suggestion never starts an LLM request, even with its saved enabled flag", async () => {
   const { result } = renderHook(() => useNoteSuggestion(), { wrapper })
-  const config = DEFAULT_CONFIG.providersConfig.find(isLLMProviderConfig)!
+  const config = DEFAULT_PROVIDER_CONFIG.openai
   await act(async () =>
     result.current.maybeFire({
       sessionKey: "test:0",

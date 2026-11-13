@@ -1,4 +1,5 @@
 import { browser } from "#imports"
+import { shouldRegisterUninstallSurvey } from "@/utils/account-features/ui-policy" // fork:account-off
 import { EXTENSION_VERSION } from "@/utils/constants/app"
 import { i18n } from "@/utils/i18n"
 
@@ -52,6 +53,7 @@ function getUILang(): string {
 }
 
 export async function setupUninstallSurvey() {
+  if (!shouldRegisterUninstallSurvey()) return browser.runtime.setUninstallURL("") // fork:account-off
   const surveyUrl = i18n.t("uninstallSurveyUrl")
   const browserType = import.meta.env.BROWSER
 

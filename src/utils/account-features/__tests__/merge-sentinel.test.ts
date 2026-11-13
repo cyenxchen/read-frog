@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url"
 import { expect, it, vi } from "vitest"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
 import { BUILT_IN_AI_PROVIDER_IDS } from "@/utils/constants/provider-ids"
+import { DEFAULT_PROVIDER_CONFIG } from "@/utils/constants/providers"
 import { remapHiddenProviderRefs } from "../remap-hidden-providers"
 
 vi.mock("../flag", () => ({ ACCOUNT_FEATURES_ENABLED: false }))
@@ -118,8 +119,11 @@ it("keeps the account-client import inventory reviewed", () => {
 
 it("leaves only the parked note-suggestion ID in defaults with a usable LLM", () => {
   const config = structuredClone(DEFAULT_CONFIG)
-  const llm = config.providersConfig.find((p) => p.provider === "openai")!
-  Object.assign(llm, { enabled: true, apiKey: "test-key" })
+  config.providersConfig.push({
+    ...structuredClone(DEFAULT_PROVIDER_CONFIG.openai),
+    enabled: true,
+    apiKey: "test-key",
+  })
   const remapped = remapHiddenProviderRefs(config)
   const hiddenPaths: string[] = []
   function visit(value: unknown, path: string[]) {

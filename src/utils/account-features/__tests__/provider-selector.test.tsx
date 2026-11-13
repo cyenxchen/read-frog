@@ -3,12 +3,13 @@ import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, expect, it, vi } from "vitest"
 import ProviderSelector from "@/components/llm-providers/provider-selector"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
+import { DEFAULT_PROVIDER_CONFIG } from "@/utils/constants/providers"
 
 vi.mock("../flag", () => ({ ACCOUNT_FEATURES_ENABLED: false }))
 vi.mock("@/components/providers/theme-provider", () => ({ useTheme: () => ({ theme: "light" }) }))
 afterEach(cleanup)
 
-const llm = DEFAULT_CONFIG.providersConfig.find((p) => p.provider === "openai")!
+const llm = DEFAULT_PROVIDER_CONFIG.openai
 const translator = DEFAULT_CONFIG.providersConfig.find((p) => p.provider === "microsoft-translate")!
 it.each([
   { name: "empty", providers: [] },

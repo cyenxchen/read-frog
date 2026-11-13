@@ -22,3 +22,9 @@ export function isHiddenAccountPost(post: { type?: string } | null | undefined):
 export const MISSING_SUBTITLES_MESSAGE_KEY = ACCOUNT_FEATURES_ENABLED
   ? "subtitles.sidebar.needsSubtitles"
   : "subtitles.errors.noSubtitlesFound"
+
+export const PROVIDER_PROMOTIONS_ENABLED = ACCOUNT_FEATURES_ENABLED
+
+export function shouldRegisterUninstallSurvey(): boolean {
+  return ACCOUNT_FEATURES_ENABLED
+}

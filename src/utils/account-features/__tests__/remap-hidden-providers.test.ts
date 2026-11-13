@@ -330,10 +330,11 @@ describe("config schema is lenient before remapping", () => {
       })
     }
     if (variant === "usable LLM") {
-      Object.assign(
-        c.providersConfig.find((p) => p.provider === "openai")!,
-        { enabled: true, apiKey: "key" },
-      )
+      c.providersConfig.push({
+        ...structuredClone(DEFAULT_PROVIDER_CONFIG.openai),
+        enabled: true,
+        apiKey: "key",
+      })
     }
     if (variant === "keyless local LLM") {
       c.providersConfig.push({ ...structuredClone(DEFAULT_PROVIDER_CONFIG.ollama), enabled: true })
