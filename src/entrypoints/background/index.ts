@@ -2,6 +2,7 @@ import "@/utils/zod-config"
 import type { Config, UiLanguage } from "@/types/config/config"
 import { browser, defineBackground } from "#imports"
 import { env } from "@/env"
+import { shouldOpenInstallGuide } from "@/utils/account-features/ui-policy" // fork:account-off
 import { storageAdapter } from "@/utils/atoms/storage-adapter"
 import { selectFreshTranslateProviders } from "@/utils/config/default-translate-provider"
 import { CONFIG_STORAGE_KEY } from "@/utils/constants/config"
@@ -65,7 +66,8 @@ export default defineBackground({
 
       // Open tutorial page when extension is installed. `from=install` tells
       // fresh installs apart from other visits in the website's guide analytics.
-      if (details.reason === "install") {
+      if (details.reason === "install" && shouldOpenInstallGuide()) {
+        // fork:account-off
         await browser.tabs.create({
           url: `${env.WXT_WEBSITE_URL}/guide/step-1?from=install`,
         })

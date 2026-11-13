@@ -4,6 +4,7 @@ import type { SelectionToolbarCustomAction } from "@/types/config/selection-tool
 import { IconBookmarkPlus } from "@tabler/icons-react"
 import { Button } from "@/components/ui/base-ui/button"
 import { SELECTION_TOOLBAR_FOOTER_COMPACT_CLASSES } from "@/components/ui/selection-popover/selection-toolbar-footer-compact"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { authClient } from "@/utils/auth/auth-client"
 import { i18n } from "@/utils/i18n"
 import { sanitizeCustomActionNotebaseConnection } from "@/utils/notebase/connection"
@@ -33,6 +34,8 @@ export function SaveToNotebaseButton({
   )
   const { isPending: isSessionPending } = authClient.useSession()
   const { save, isSaving, isAuthenticated, hasCurrentAccount } = useSaveToNotebase()
+
+  if (!ACCOUNT_FEATURES_ENABLED) return null // fork:account-off
 
   const handleClick = () => {
     if (!result) {

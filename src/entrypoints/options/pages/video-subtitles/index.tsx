@@ -1,3 +1,4 @@
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { i18n } from "@/utils/i18n"
 import { PageLayout } from "../../components/page-layout"
 import { AiQuotaSection } from "./ai-quota"
@@ -15,7 +16,8 @@ export function VideoSubtitlesPage() {
       innerClassName="flex flex-col gap-10"
     >
       <PreferenceSection />
-      <AiQuotaSection />
+      {/* // fork:account-off */}
+      {ACCOUNT_FEATURES_ENABLED && <AiQuotaSection />}
       <SubtitlesStyleSection />
       <CustomPromptsSection />
       <SubtitlesQueueSection />

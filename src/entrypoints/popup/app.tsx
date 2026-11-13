@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 import { UserAccountMenuPopup } from "@/components/user-account-menu"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { i18n } from "@/utils/i18n"
 import { openOptionsPage } from "@/utils/navigation"
 import { version } from "../../../package.json"
@@ -27,7 +28,8 @@ function App() {
               whatever is left of the 320px popup is its width, and a long display
               name ellipses inside that instead of pushing the icons off. */}
           <div className="flex items-center justify-between gap-2">
-            <UserAccountMenuPopup />
+            {/* // fork:account-off */}
+            {ACCOUNT_FEATURES_ENABLED ? <UserAccountMenuPopup /> : <span />}
             <div className="flex shrink-0 items-center">
               <TranslationHubButton />
               <DiscordButton />

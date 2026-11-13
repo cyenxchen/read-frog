@@ -4,6 +4,7 @@ import { RPCLink } from "@orpc/client/fetch"
 import { createTanstackQueryUtils } from "@orpc/tanstack-query"
 import { ORPC_PREFIX } from "@read-frog/definitions"
 import { env } from "@/env"
+import { assertAccountFeaturesEnabled } from "@/utils/account-features/network-guard" // fork:account-off
 import { normalizeHeaders } from "../http"
 import { sendMessage } from "../message"
 import { buildExtensionORPCHeaders } from "./client-context"
@@ -13,6 +14,7 @@ const link = new RPCLink<ExtensionORPCClientContext>({
   headers: ({ context }) => buildExtensionORPCHeaders(context),
   // Proxy fetch through background to avoid CORS in content scripts
   fetch: async (request, init) => {
+    assertAccountFeaturesEnabled() // fork:account-off
     const url = request.url
     const method = request.method
     const headerEntries = normalizeHeaders(request.headers)

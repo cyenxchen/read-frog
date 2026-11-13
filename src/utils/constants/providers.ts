@@ -33,6 +33,8 @@ import {
   isCustomModelOnlyProvider,
 } from "@/types/config/provider"
 import { omit, pick } from "@/types/utils"
+import { shouldSeedFreshProvider } from "@/utils/account-features/provider-policy" // fork:account-off
+import { PROVIDER_PROMOTIONS_ENABLED } from "@/utils/account-features/ui-policy" // fork:account-off
 import { i18n } from "@/utils/i18n"
 import { getLobeIconsCDNUrlFn } from "../logo"
 
@@ -230,7 +232,7 @@ export const PROVIDER_ITEMS: Record<
     website: "https://www.jalapeno-cloud.ai/readfrog",
     apiKeyUrl: "https://www.jalapeno-cloud.ai/readfrog",
     sponsor: {
-      sponsoring: true,
+      sponsoring: PROVIDER_PROMOTIONS_ENABLED, // fork:account-off
       referUrl: "https://www.jalapeno-cloud.ai/readfrog",
       // Both default to the generic sponsor wording; Jalapeno names its actual offer instead.
       badgeI18nKey: "options.apiProviders.badges.sponsorJalapenoCloud",
@@ -245,7 +247,7 @@ export const PROVIDER_ITEMS: Record<
     // serves both new and returning users.
     apiKeyUrl: "https://ifapi.org/sign-up?aff=readfrog&utm_source=readfrog&utm_medium=app",
     sponsor: {
-      sponsoring: true,
+      sponsoring: PROVIDER_PROMOTIONS_ENABLED, // fork:account-off
       referUrl: "https://ifapi.org/sign-up?aff=readfrog&utm_source=readfrog&utm_medium=app",
       badgeI18nKey: "options.apiProviders.badges.sponsorIfapi",
       ctaI18nKey: "options.apiProviders.sponsorCtaIfapi",
@@ -741,7 +743,7 @@ export const DEFAULT_PROVIDER_CONFIG_LIST: ProvidersConfig = [
   DEFAULT_PROVIDER_CONFIG.jalapenocloud,
   DEFAULT_PROVIDER_CONFIG.ifapi,
   DEFAULT_PROVIDER_CONFIG.deepseek,
-]
+].filter(shouldSeedFreshProvider) // fork:account-off
 
 /** Resolve a provider's default description in the active interface language. */
 export function getDefaultProviderDescription(providerType: APIProviderTypes): string | undefined {

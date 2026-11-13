@@ -4,6 +4,7 @@ import { useAtomValue } from "jotai"
 import { Button } from "@/components/ui/base-ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/base-ui/tooltip"
 import { env } from "@/env"
+import { isHiddenAccountPost } from "@/utils/account-features/ui-policy" // fork:account-off
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import {
   getBlogLocaleFromUILanguage,
@@ -42,6 +43,8 @@ export default function BlogNotification() {
       : `${env.WXT_WEBSITE_URL}/blog`
     window.open(blogUrl, "_blank")
   }
+
+  if (isHiddenAccountPost(latestBlogPost)) return null // fork:account-off
 
   const showIndicator = hasNewBlogPost(lastViewedDate ?? null, latestBlogPost?.date ?? null)
 

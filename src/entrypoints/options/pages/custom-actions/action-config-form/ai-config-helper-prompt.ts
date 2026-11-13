@@ -19,6 +19,8 @@ import {
   MAX_CUSTOM_ACTION_LAYOUT_LENGTH,
   selectionToolbarCustomActionOutputTypeSchema,
 } from "@/types/config/selection-toolbar"
+import { filterAccountFeaturesFromAiPrompt } from "@/utils/account-features/ai-config-helper-prompt" // fork:account-off
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import {
   getSelectionToolbarCustomActionTokenCellText,
   isSelectionOutputField,
@@ -195,7 +197,7 @@ function buildCurrentAction(
     return name === undefined ? [] : [`\`${name}\``]
   })
   const notebase =
-    mappedFields.length > 0
+    ACCOUNT_FEATURES_ENABLED && mappedFields.length > 0 // fork:account-off
       ? `\nThis action saves results to a Notebase, from these fields: ${mappedFields.join(", ")}. Deleting one of them, or changing its type, breaks that mapping and I'd have to map it again in the Notebase tab. Renaming is fine.`
       : ""
 
@@ -252,7 +254,8 @@ export function buildAiConfigHelperPrompt({
     label(`${TEMPLATES}.improveWriting.name`),
   ].join(", ")
 
-  return `# Help me set up a custom AI action in Read Frog
+  return filterAccountFeaturesFromAiPrompt(
+    `# Help me set up a custom AI action in Read Frog
 
 I use Read Frog (陪读蛙), a browser extension for reading and learning languages on the web. It lets me create **custom AI actions**: buttons that send the text I select on a page to an AI model and show a structured answer in a popup. I'd like your help configuring one. You can't see my extension, so you'll design the settings and I'll copy them in by hand. Everything you need is below: how actions work, every setting and its rules, the layout language, and the action I have open.
 
@@ -392,5 +395,7 @@ I copy each setting into the editor by hand, so:
 - **New action**: tell me to click ${addAction} and pick ${blank} (or ${templateNames}, if one is a closer start), then fill in the settings. The ${blank} template starts with one field named ${defaultField}; tell me to rename or delete it.
 - Don't invent features that aren't described here: actions can't call other actions, fetch web pages, remember earlier runs or run JavaScript.
 
-${buildCurrentAction(action, otherActionNames)}`
+${buildCurrentAction(action, otherActionNames)}`,
+    uiLocale,
+  ) // fork:account-off
 }

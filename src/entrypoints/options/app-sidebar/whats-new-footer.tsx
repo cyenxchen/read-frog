@@ -14,6 +14,7 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/base-ui/sidebar"
 import { useResolvedAccountPlan } from "@/components/user-account-menu/shared"
 import { env } from "@/env"
+import { isHiddenAccountPost } from "@/utils/account-features/ui-policy" // fork:account-off
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import {
   buildBilibiliEmbedUrl,
@@ -105,7 +106,8 @@ export function WhatsNewFooter() {
     // oxlint-disable-next-line react/exhaustive-effect-dependencies -- the dependencies are re-run triggers, not values the effect body reads
   }, [isLastViewedDateFetched, lastViewedDateTimestamp, latestBlogPostKey, open])
 
-  if (!latestBlogPost) {
+  if (!latestBlogPost || isHiddenAccountPost(latestBlogPost)) {
+    // fork:account-off
     return null
   }
 

@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { storage } from "#imports"
 import { env } from "@/env"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { BUILT_IN_DICTIONARY_ACTION_ID } from "@/utils/constants/custom-action"
 import { getRandomUUID } from "@/utils/crypto-polyfill"
 
@@ -69,6 +70,7 @@ export function canUseGuideDictionaryNotebaseTracking(actionId: string, currentU
 }
 
 export async function getGuideDictionaryNotebaseState(): Promise<GuideDictionaryNotebaseState> {
+  if (!ACCOUNT_FEATURES_ENABLED) return { completed: true } // fork:account-off
   const value = await storage.getItem<unknown>(
     getLocalStorageKey(GUIDE_DICTIONARY_NOTEBASE_COMPLETED_STORAGE_KEY),
   )

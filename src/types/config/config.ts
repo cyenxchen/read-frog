@@ -1,5 +1,6 @@
 import { langLevel } from "@read-frog/definitions"
 import { z } from "zod"
+import { remapHiddenProviderRefs } from "@/utils/account-features/remap-hidden-providers" // fork:account-off
 import {
   BUILT_IN_ACTION_IDS,
   BUILT_IN_ACTION_KEYS,
@@ -296,5 +297,6 @@ export const configSchema = z
       }
     })
   })
+  .transform((c) => remapHiddenProviderRefs(c)) // fork:account-off
 
 export type Config = z.infer<typeof configSchema>

@@ -21,8 +21,11 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/base-ui/sidebar"
 import { env } from "@/env"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { TRANSLATION_HUB_PAGE_PATH } from "@/utils/constants/translation-hub"
 import { i18n } from "@/utils/i18n"
+
+const PdfTranslationItem = ACCOUNT_FEATURES_ENABLED ? SidebarMenuSubItem : () => null // fork:account-off
 
 const OVERLAY_TOOLS_PATHS = ["/floating-button", "/selection-toolbar", "/context-menu"] as const
 /**
@@ -104,7 +107,7 @@ export function FeaturesNav() {
                       <span>{i18n.t("options.inputTranslation.title")}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
+                  <PdfTranslationItem>
                     <SidebarMenuSubButton
                       render={
                         <a
@@ -117,7 +120,7 @@ export function FeaturesNav() {
                       <span className="truncate">{i18n.t("options.tools.pdfTranslation")}</span>
                       <NewBadge size="sm" className="ml-auto" />
                     </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
+                  </PdfTranslationItem>
                 </SidebarMenuSub>
               </CollapsibleContent>
             </SidebarMenuItem>

@@ -5,6 +5,7 @@ import { requestEditorNavigationAtom } from "@/components/form/autosave-navigati
 import ProviderIcon from "@/components/provider-icon"
 import { useTheme } from "@/components/providers/theme-provider"
 import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/base-ui/dialog"
+import { getProviderPickerOrder } from "@/utils/account-features/provider-policy" // fork:account-off
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import {
   API_PROVIDER_ITEMS,
@@ -47,7 +48,7 @@ export default function AddProviderDialog({ onClose }: { onClose: () => void }) 
           groupDescription={i18n.t(
             `options.apiProviders.dialog.groups.${groupKey as keyof typeof PROVIDER_GROUPS}.description`,
           )}
-          providerTypes={group.types}
+          providerTypes={getProviderPickerOrder(group.types)} // fork:account-off
           handleAddProvider={handleAddProvider}
         />
       ))}

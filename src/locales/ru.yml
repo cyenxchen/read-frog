@@ -1,6 +1,7 @@
 name: Read Frog
-extName: "Read Frog - ИИ-перевод и карточки"
-extDescription: "Двуязычный ИИ-перевод веб-страниц и субтитров YouTube, Netflix и X. Сохраняйте новые слова и повторяйте их на карточках."
+# fork:account-off
+extName: "Read Frog - ИИ-перевод"
+extDescription: "Двуязычный ИИ-перевод веб-страниц и субтитров YouTube, Netflix и X."
 uninstallSurveyUrl: https://tally.so/r/nPK6Ob
 account:
   login: Войти

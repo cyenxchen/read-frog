@@ -9,6 +9,7 @@ import {
   SidebarHeader,
 } from "@/components/ui/base-ui/sidebar"
 import { UserAccountMenuSidebar } from "@/components/user-account-menu"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { i18n } from "@/utils/i18n"
 import { getCommandPaletteShortcutHint } from "@/utils/os"
 import { commandPaletteOpenAtom } from "../command-palette/atoms"
@@ -25,7 +26,8 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="transition-all group-data-[state=expanded]:px-5 group-data-[state=expanded]:pt-4">
-        <UserAccountMenuSidebar />
+        {/* // fork:account-off */}
+        {ACCOUNT_FEATURES_ENABLED && <UserAccountMenuSidebar />}
         <InputGroup onClick={() => setCommandPaletteOpen(true)} className="bg-background">
           <InputGroupInput
             readOnly
@@ -43,7 +45,8 @@ export function AppSidebar() {
       <SidebarContent className="transition-all group-data-[state=expanded]:px-2">
         <SettingsNav />
         <FeaturesNav />
-        <ProductNav />
+        {/* // fork:account-off */}
+        {ACCOUNT_FEATURES_ENABLED && <ProductNav />}
       </SidebarContent>
       <SidebarFooter className="transition-all group-data-[state=expanded]:px-2">
         <WhatsNewFooter />
