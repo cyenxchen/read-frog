@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import type { NetflixSubtitlesResponse } from ".."
+import type { TrackLanguagePreference } from "@/utils/subtitles/track-language"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   NETFLIX_LOAD_POST_MESSAGE_TIMEOUT_MS,
@@ -21,6 +22,13 @@ const postMessageRequest =
 vi.mock("@/utils/subtitles/fetchers/post-message-request", () => ({
   postMessageRequest: (type: string, message: { action: string }, timeoutMs?: number) =>
     postMessageRequest(type, message, timeoutMs),
+}))
+
+const readTrackLanguagePreference = vi.fn<() => Promise<TrackLanguagePreference | null>>(
+  async () => null,
+)
+vi.mock("@/utils/subtitles/read-track-language-preference", () => ({
+  readTrackLanguagePreference: () => readTrackLanguagePreference(),
 }))
 
 const TTML = `<?xml version="1.0" encoding="utf-8"?>
@@ -211,5 +219,46 @@ describe("NetflixSubtitlesFetcher", () => {
       expect.objectContaining({ action: "restore" }),
       POST_MESSAGE_TIMEOUT_MS,
     )
+  })
+})
+
+describe("NetflixSubtitlesFetcher by language settings", () => {
+  beforeEach(() => {
+    postMessageRequest.mockReset()
+    readTrackLanguagePreference.mockResolvedValue(null)
+  })
+
+  it("sends the reader's language preference with a load", async () => {
+    const preference = { target: "zh-Hans", source: "en" } as const
+    readTrackLanguagePreference.mockResolvedValue(preference)
+    respondWith({ load: response() })
+
+    await new NetflixSubtitlesFetcher().fetch()
+
+    expect(postMessageRequest).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ action: "load", preference }),
+      NETFLIX_LOAD_POST_MESSAGE_TIMEOUT_MS,
+    )
+  })
+
+  // The track was picked by its `bcp47`; the file's own `xml:lang` may say less.
+  it("takes the language of a track picked by language from the player, not the file", async () => {
+    readTrackLanguagePreference.mockResolvedValue({ target: "zh-Hans", source: null })
+    respondWith({ load: response({ language: "zh-Hans" }) })
+    const fetcher = new NetflixSubtitlesFetcher()
+
+    await fetcher.fetch()
+
+    expect(fetcher.getSourceLanguage()).toBe("zh-Hans")
+  })
+
+  it("keeps the file's language while the setting is off", async () => {
+    respondWith({ load: response({ language: "zh-Hans" }) })
+    const fetcher = new NetflixSubtitlesFetcher()
+
+    await fetcher.fetch()
+
+    expect(fetcher.getSourceLanguage()).toBe("en")
   })
 })

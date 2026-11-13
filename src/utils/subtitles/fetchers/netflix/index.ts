@@ -1,4 +1,5 @@
 import type { SubtitlesFetcher } from "../types"
+import type { TrackLanguagePreference } from "@/utils/subtitles/track-language"
 import type { SubtitlesFragment } from "@/utils/subtitles/types"
 import { z } from "zod"
 import {
@@ -9,6 +10,7 @@ import {
 } from "@/utils/constants/subtitles"
 import { i18n } from "@/utils/i18n"
 import { NoSubtitlesError, OverlaySubtitlesError } from "@/utils/subtitles/errors"
+import { readTrackLanguagePreference } from "@/utils/subtitles/read-track-language-preference"
 import { postMessageRequest } from "../post-message-request"
 import { parseNetflixTtml } from "./ttml"
 
@@ -19,6 +21,8 @@ const netflixSubtitlesResponseSchema = z.object({
   requestId: z.string(),
   movieId: z.number().nullable(),
   trackId: z.string().nullable(),
+  /** The track's `bcp47`, which is what a track picked by language was matched on. */
+  language: z.string().nullable().optional(),
   translatable: z.boolean(),
   ttml: z.string().nullable(),
 })
@@ -27,10 +31,11 @@ export type NetflixSubtitlesResponse = z.infer<typeof netflixSubtitlesResponseSc
 
 async function requestNetflixSubtitles(
   action: NetflixSubtitlesAction,
+  preference: TrackLanguagePreference | null = null,
 ): Promise<NetflixSubtitlesResponse | null> {
   const response = await postMessageRequest(
     NETFLIX_SUBTITLES_RESPONSE_TYPE,
-    { type: NETFLIX_SUBTITLES_REQUEST_TYPE, action },
+    { type: NETFLIX_SUBTITLES_REQUEST_TYPE, action, ...(preference ? { preference } : {}) },
     action === "load" ? NETFLIX_LOAD_POST_MESSAGE_TIMEOUT_MS : POST_MESSAGE_TIMEOUT_MS,
   )
   const parsed = netflixSubtitlesResponseSchema.safeParse(response)
@@ -46,9 +51,11 @@ export class NetflixSubtitlesFetcher implements SubtitlesFetcher {
 
   async fetch(): Promise<SubtitlesFragment[]> {
     let response: NetflixSubtitlesResponse | null
+    let preference: TrackLanguagePreference | null = null
     this.loadsInFlight++
     try {
-      response = await requestNetflixSubtitles("load")
+      preference = await readTrackLanguagePreference()
+      response = await requestNetflixSubtitles("load", preference)
     } finally {
       this.loadsInFlight--
     }
@@ -84,7 +91,9 @@ export class NetflixSubtitlesFetcher implements SubtitlesFetcher {
     }
 
     this.subtitles = parsed.fragments
-    this.sourceLanguage = parsed.language
+    // A track picked by language matched on the player's `bcp47`; the file's `xml:lang` can say
+    // less, and the untranslated-track check must see what the pick saw.
+    this.sourceLanguage = (preference && response.language) || parsed.language
     return this.subtitles
   }
 
