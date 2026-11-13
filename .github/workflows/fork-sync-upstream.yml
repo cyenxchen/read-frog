@@ -3,7 +3,7 @@ name: Fork - Sync Upstream Release
 # Every 12 hours, checks upstream's latest release. When it is one this repository
 # has not released yet, it:
 #   1. merges that release's tag (not upstream main, which may hold unreleased work)
-#      into main;
+#      into main, keeping this repository's README.md when that is the only conflict;
 #   2. runs type checks, the test suite and a build;
 #   3. pushes main and a v<version>-fork.<n> tag, which starts fork-release.yml.
 # On a merge conflict or a failed check it pushes nothing and fails, with the reason
@@ -124,9 +124,18 @@ jobs:
           before="$(git rev-parse HEAD)"
           if ! git merge --no-edit -m "chore(sync): merge upstream ${UPSTREAM_TAG}" "$upstream_commit"; then
             git diff --name-only --diff-filter=U > "$RUNNER_TEMP/conflicts.txt"
-            git merge --abort || true
-            echo "::error::Merging upstream ${UPSTREAM_TAG} conflicts in: $(paste -sd ' ' "$RUNNER_TEMP/conflicts.txt")"
-            exit 1
+            if [ "$(cat "$RUNNER_TEMP/conflicts.txt")" = "README.md" ]; then
+              # This repository keeps its own README; upstream's edits to it are dropped.
+              echo "Only README.md conflicts; keeping this repository's version."
+              git checkout --ours -- README.md
+              git add README.md
+              git commit --no-edit
+              rm "$RUNNER_TEMP/conflicts.txt"
+            else
+              git merge --abort || true
+              echo "::error::Merging upstream ${UPSTREAM_TAG} conflicts in: $(paste -sd ' ' "$RUNNER_TEMP/conflicts.txt")"
+              exit 1
+            fi
           fi
           merged="$(node -p "require('./package.json').version")"
           if [ "$merged" != "$UPSTREAM_VERSION" ]; then
