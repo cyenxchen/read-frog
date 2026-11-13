@@ -45,7 +45,8 @@ export function AppSidebar() {
       <SidebarContent className="transition-all group-data-[state=expanded]:px-2">
         <SettingsNav />
         <FeaturesNav />
-        <ProductNav />
+        {/* // fork:account-off */}
+        {ACCOUNT_FEATURES_ENABLED && <ProductNav />}
       </SidebarContent>
       <SidebarFooter className="transition-all group-data-[state=expanded]:px-2">
         <WhatsNewFooter />

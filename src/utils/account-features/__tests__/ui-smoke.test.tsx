@@ -24,6 +24,10 @@ import { DEFAULT_CONFIG } from "@/utils/constants/config"
 import { CUSTOM_ACTION_NOTEBASE_SECTION_ID } from "@/utils/navigation"
 
 vi.mock("../flag", () => ({ ACCOUNT_FEATURES_ENABLED: false }))
+// ProductNav uses the real locale resolver; Vitest cannot load its YAML resources.
+vi.mock("@/utils/i18n/resources", async () =>
+  vi.importActual<typeof import("@/utils/i18n/locales")>("@/utils/i18n/locales"),
+)
 vi.mock("@/components/user-account-menu", () => ({
   UserAccountMenuPopup: () => <button type="button">Account menu</button>,
   UserAccountMenuSidebar: () => <button type="button">Account menu</button>,
@@ -55,7 +59,6 @@ vi.mock("@/components/ui/base-ui/sidebar", () => {
 })
 vi.mock("@/entrypoints/options/app-sidebar/collapse-toggle", () => ({ CollapseToggle: () => null }))
 vi.mock("@/entrypoints/options/app-sidebar/settings-nav", () => ({ SettingsNav: () => null }))
-vi.mock("@/entrypoints/options/app-sidebar/product-nav", () => ({ ProductNav: () => null }))
 vi.mock("@/entrypoints/options/pages/api-providers/providers-config/add-provider-dialog", () => ({
   default: () => null,
 }))
@@ -183,6 +186,29 @@ it("popup and options sidebar do not mount account menus", () => {
   )
   expect(screen.queryAllByText("Account menu")).toHaveLength(0)
   expect(screen.getByText("popup.options")).toBeInTheDocument()
+})
+it("sidebar hides the Product group, Roadmap and Help & Community", () => {
+  mount(<AppSidebar />)
+  expect.soft(screen.queryByText("options.sidebar.product")).not.toBeInTheDocument()
+  expect.soft(screen.queryByText("options.product.roadmap")).not.toBeInTheDocument()
+  expect.soft(screen.queryByText("options.helpAndCommunity.title")).not.toBeInTheDocument()
+  expect(screen.getByText("options.sidebar.features")).toBeInTheDocument()
+})
+it("command palette offers no Product, Roadmap or Help & Community destinations", () => {
+  mount(<SettingsSearch />)
+  for (const titleKey of [
+    "options.sidebar.product",
+    "options.product.roadmap",
+    "options.helpAndCommunity.title",
+    ...SEARCH_ITEMS.filter((item) => item.route === "/help-and-community").map(
+      (item) => item.titleKey,
+    ),
+  ]) {
+    expect(screen.queryByText(titleKey)).not.toBeInTheDocument()
+  }
+  expect(
+    screen.getByText("options.translation.preference.translationMode.title"),
+  ).toBeInTheDocument()
 })
 it("API Providers hides hosted cards, editor and usage, keeping own-provider editing", () => {
   mount(<ApiProvidersPage />)
