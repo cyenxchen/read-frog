@@ -10,9 +10,9 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/base-ui/select"
 import { isLLMProviderConfig, isPureTranslateProviderConfig } from "@/types/config/provider"
+import { AccountProviderSelectValue as SelectValue } from "@/utils/account-features/provider-select-value" // fork:account-off
 import { i18n } from "@/utils/i18n"
 import {
   getProviderLogo,
