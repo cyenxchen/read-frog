@@ -6,7 +6,9 @@ name: Fork - Sync Upstream Release
 #      into main;
 #   2. runs type checks, the test suite and a build;
 #   3. pushes main and a v<version>-fork.<n> tag, which starts fork-release.yml.
-# On a merge conflict or a failed check it pushes nothing and opens an issue.
+# On a merge conflict or a failed check it pushes nothing and fails, with the reason
+# in the run's summary; GitHub emails the owner about failed scheduled runs. (Issues
+# are turned off in this repository.)
 #
 # Needs the SYNC_TOKEN secret: a fine-grained personal access token for this
 # repository only, with Contents and Workflows read/write. The built-in token can't
@@ -15,7 +17,7 @@ name: Fork - Sync Upstream Release
 # and its dependencies run.
 #
 # Upstream workflows stay off: a release that adds a workflow file is not pushed
-# automatically (an issue asks for a manual sync), and after each run every active
+# automatically (the run fails and asks for a manual sync), and after each run every active
 # workflow except this repository's own fork-*.yml files is disabled.
 
 on:
@@ -35,7 +37,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
   actions: write
 
 concurrency:
@@ -209,10 +210,9 @@ jobs:
               esac
             done
 
-      - name: Open an issue on failure
+      - name: Explain the failure
         if: failure()
         env:
-          GH_TOKEN: ${{ github.token }}
           FAILED_STEP: >-
             ${{ steps.token.outcome == 'failure' && 'the SYNC_TOKEN secret is missing'
             || steps.upstream.outcome == 'failure' && 'finding the upstream release'
@@ -225,18 +225,18 @@ jobs:
             || steps.disable.outcome == 'failure' && 'disabling upstream workflows'
             || 'an unexpected step' }}
           PUSHED: ${{ steps.push.outcome == 'success' }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
           tag="${UPSTREAM_TAG:-the latest upstream release}"
-          title="Upstream sync failed: ${tag}"
           if [ "$PUSHED" = "true" ]; then
             pushed_note="main and the release tag were pushed before this step failed."
           else
             pushed_note="Nothing was pushed."
           fi
-          body_file="$(mktemp)"
+          echo "::error::Syncing ${tag} stopped at ${FAILED_STEP}. ${pushed_note}"
           {
+            echo "## Upstream sync failed: ${tag}"
+            echo
             echo "Syncing ${tag} from ${UPSTREAM_REPO} stopped at **${FAILED_STEP}**. ${pushed_note}"
             echo
             if [ -s "$RUNNER_TEMP/conflicts.txt" ]; then
@@ -253,15 +253,5 @@ jobs:
               sed 's/^/- `/; s/$/`/' "$RUNNER_TEMP/new-workflows.txt"
               echo
             fi
-            echo "Run: ${RUN_URL}"
-            echo
             echo "Fix it locally (merge the upstream tag into main and push), then run this workflow again, or let the next scheduled run pick it up."
-          } > "$body_file"
-          # The title holds only a validated tag, so it is safe inside the jq string.
-          number="$(gh issue list --state open --search "\"${title}\" in:title" --json number,title \
-            --jq "map(select(.title == \"${title}\")) | .[0].number // empty")"
-          if [ -n "$number" ]; then
-            gh issue comment "$number" --body-file "$body_file"
-          else
-            gh issue create --title "$title" --body-file "$body_file"
-          fi
+          } >> "$GITHUB_STEP_SUMMARY"
