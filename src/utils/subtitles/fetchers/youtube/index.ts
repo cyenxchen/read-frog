@@ -1,6 +1,7 @@
 import type { SubtitlesFragment } from "../../types"
 import type { SubtitlesFetcher } from "../types"
 import type { CaptionTrack, PlayerData, YoutubeTimedText } from "./types"
+import type { TrackLanguagePreference } from "@/utils/subtitles/track-language"
 import { getLocalConfig } from "@/utils/config/storage"
 import {
   ENSURE_SUBTITLES_REQUEST_TYPE,
@@ -26,6 +27,8 @@ import { i18n } from "@/utils/i18n"
 import { sleep } from "@/utils/sleep"
 import { NoSubtitlesError, OverlaySubtitlesError } from "@/utils/subtitles/errors"
 import { postMessageRequest } from "@/utils/subtitles/fetchers/post-message-request"
+import { readTrackLanguagePreference } from "@/utils/subtitles/read-track-language-preference"
+import { pickByLanguage } from "@/utils/subtitles/track-language"
 import { getYoutubeVideoId } from "@/utils/subtitles/video-id"
 import { detectFormat } from "./format-detector"
 import { filterNoiseFromEvents } from "./noise-filter"
@@ -70,6 +73,8 @@ export class YoutubeSubtitlesFetcher implements SubtitlesFetcher {
   private preSegmented: boolean = false
   // Bumped by cleanup() so a player lookup still waiting gives up.
   private lookupGeneration = 0
+  // Read once per fetch or track check, so every track pick in it, the hash included, agrees.
+  private languagePreference: TrackLanguagePreference | null = null
 
   async fetch(): Promise<SubtitlesFragment[]> {
     const videoId = getYoutubeVideoId()
@@ -77,6 +82,7 @@ export class YoutubeSubtitlesFetcher implements SubtitlesFetcher {
       throw new OverlaySubtitlesError(i18n.t("subtitles.errors.videoNotFound"))
     }
 
+    this.languagePreference = await readTrackLanguagePreference()
     const currentHash = await this.computeTrackHash()
 
     if (currentHash && this.subtitles.length > 0 && this.cachedTrackHash === currentHash) {
@@ -170,6 +176,7 @@ export class YoutubeSubtitlesFetcher implements SubtitlesFetcher {
     }
 
     try {
+      this.languagePreference = await readTrackLanguagePreference()
       const currentHash = await this.computeTrackHash()
       return currentHash !== null && this.cachedTrackHash === currentHash
     } catch {
@@ -378,6 +385,8 @@ export class YoutubeSubtitlesFetcher implements SubtitlesFetcher {
    * Select the best subtitle track from available tracks.
    *
    * Priority order:
+   * 0. With the reader's language settings on: a track in the target language, else one in the
+   *    source language (YouTube's own auto-translations are not in `captionTracks`)
    * 1. User's currently selected track in YouTube player (if available)
    * 2. Human-created subtitles without name (original language, highest quality)
    * 3. Human-created subtitles with name (may be translated versions)
@@ -388,6 +397,15 @@ export class YoutubeSubtitlesFetcher implements SubtitlesFetcher {
     const { captionTracks: tracks, selectedTrackLanguageCode, selectedTrackVssId } = playerData
 
     if (tracks.length === 0) return null
+
+    const byLanguage = pickByLanguage(tracks, this.languagePreference, (t) => ({
+      locale: t.languageCode,
+      kind: t.kind === "asr" ? "asr" : "human",
+      selected: selectedTrackVssId
+        ? t.vssId === selectedTrackVssId
+        : t.languageCode === selectedTrackLanguageCode,
+    }))
+    if (byLanguage) return byLanguage
 
     // Priority 1: User's selected track in YouTube player
     if (selectedTrackVssId) {
