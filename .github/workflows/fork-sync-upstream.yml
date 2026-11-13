@@ -1,0 +1,267 @@
+name: Fork - Sync Upstream Release
+
+# Every 12 hours, checks upstream's latest release. When it is one this repository
+# has not released yet, it:
+#   1. merges that release's tag (not upstream main, which may hold unreleased work)
+#      into main;
+#   2. runs type checks, the test suite and a build;
+#   3. pushes main and a v<version>-fork.<n> tag, which starts fork-release.yml.
+# On a merge conflict or a failed check it pushes nothing and opens an issue.
+#
+# Needs the SYNC_TOKEN secret: a fine-grained personal access token for this
+# repository only, with Contents and Workflows read/write. The built-in token can't
+# push commits that touch workflow files, and pushes made with it start no workflows.
+# The token is used only by the push step; it is never on disk while upstream code
+# and its dependencies run.
+#
+# Upstream workflows stay off: a release that adds a workflow file is not pushed
+# automatically (an issue asks for a manual sync), and after each run every active
+# workflow except this repository's own fork-*.yml files is disabled.
+
+on:
+  schedule:
+    - cron: "23 */12 * * *"
+  workflow_dispatch:
+    inputs:
+      upstream_tag:
+        description: "Upstream tag to sync, e.g. v1.59.3 (default: upstream's latest release)"
+        required: false
+        type: string
+      dry_run:
+        description: "Merge and check only; push nothing"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+  actions: write
+
+concurrency:
+  group: fork-sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync upstream release
+    runs-on: ubuntu-latest
+    env:
+      UPSTREAM_REPO: mengxi-ream/read-frog
+      # gh needs the repository named when no checkout has happened yet.
+      GH_REPO: ${{ github.repository }}
+      DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
+      WXT_SKIP_ENV_VALIDATION: true
+      SKIP_ENV_VALIDATION: true
+      SKIP_FREE_API: true
+      HUSKY: 0
+    steps:
+      - name: Check token
+        id: token
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          if [ -z "$SYNC_TOKEN" ]; then
+            echo "::error::The SYNC_TOKEN secret is not set; see the comment at the top of this workflow."
+            exit 1
+          fi
+
+      - name: Find upstream release
+        id: upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_TAG: ${{ inputs.upstream_tag }}
+        run: |
+          set -euo pipefail
+          tag="$REQUESTED_TAG"
+          if [ -z "$tag" ]; then
+            tag="$(gh api "repos/$UPSTREAM_REPO/releases/latest" --jq .tag_name)"
+          fi
+          if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Upstream tag '$tag' is not of the form v<major>.<minor>.<patch>"
+            exit 1
+          fi
+          echo "Upstream release: $tag"
+          echo "UPSTREAM_TAG=$tag" >> "$GITHUB_ENV"
+          echo "UPSTREAM_VERSION=${tag#v}" >> "$GITHUB_ENV"
+
+      - name: Checkout main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Decide whether to sync
+        id: plan
+        run: |
+          set -euo pipefail
+          released="$(git tag -l "${UPSTREAM_TAG}-fork.*")"
+          if [ -n "$released" ]; then
+            echo "$UPSTREAM_TAG is already released here as: $released"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          current="$(node -p "require('./package.json').version")"
+          oldest="$(printf '%s\n%s\n' "$UPSTREAM_VERSION" "$current" | sort -V | head -n 1)"
+          if [ "$UPSTREAM_VERSION" != "$current" ] && [ "$oldest" = "$UPSTREAM_VERSION" ]; then
+            echo "main is already at $current, newer than upstream's $UPSTREAM_TAG"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Merge upstream release
+        id: merge
+        if: steps.plan.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --no-tags "https://github.com/${UPSTREAM_REPO}.git" "refs/tags/${UPSTREAM_TAG}"
+          upstream_commit="$(git rev-parse 'FETCH_HEAD^{commit}')"
+          before="$(git rev-parse HEAD)"
+          if ! git merge --no-edit -m "chore(sync): merge upstream ${UPSTREAM_TAG}" "$upstream_commit"; then
+            git diff --name-only --diff-filter=U > "$RUNNER_TEMP/conflicts.txt"
+            git merge --abort || true
+            echo "::error::Merging upstream ${UPSTREAM_TAG} conflicts in: $(paste -sd ' ' "$RUNNER_TEMP/conflicts.txt")"
+            exit 1
+          fi
+          merged="$(node -p "require('./package.json').version")"
+          if [ "$merged" != "$UPSTREAM_VERSION" ]; then
+            echo "::error::After the merge package.json says $merged, not $UPSTREAM_VERSION"
+            exit 1
+          fi
+          # A new upstream workflow would start active, and could run on the push below
+          # before it is disabled; leave that release for a manual sync.
+          git diff --name-only --diff-filter=A "$before" HEAD -- .github/workflows > "$RUNNER_TEMP/new-workflows.txt"
+          if [ -s "$RUNNER_TEMP/new-workflows.txt" ]; then
+            echo "::error::Upstream ${UPSTREAM_TAG} adds workflow files: $(paste -sd ' ' "$RUNNER_TEMP/new-workflows.txt")"
+            exit 1
+          fi
+
+      - name: Setup pnpm and Node.js
+        if: steps.plan.outputs.skip == 'false'
+        uses: pnpm/setup@v3
+        with:
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        id: install
+        if: steps.plan.outputs.skip == 'false'
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint and type check
+        id: lint
+        if: steps.plan.outputs.skip == 'false'
+        run: pnpm lint
+
+      - name: Run tests
+        id: test
+        if: steps.plan.outputs.skip == 'false'
+        run: pnpm exec vitest run --exclude "**/free-api.test.ts"
+
+      - name: Build
+        id: build
+        if: steps.plan.outputs.skip == 'false'
+        run: pnpm build && pnpm build:firefox
+
+      - name: Push main and the release tag
+        id: push
+        if: steps.plan.outputs.skip == 'false' && env.DRY_RUN != 'true'
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          n=1
+          while git rev-parse -q --verify "refs/tags/${UPSTREAM_TAG}-fork.${n}" > /dev/null; do
+            n=$((n + 1))
+          done
+          fork_tag="${UPSTREAM_TAG}-fork.${n}"
+          git tag -a "$fork_tag" -m "Release ${fork_tag}, synced from upstream ${UPSTREAM_TAG}"
+          # Both refs land or neither does. Pushed with the PAT so the tag starts fork-release.yml.
+          git push --atomic "https://x-access-token:${SYNC_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            HEAD:refs/heads/main "refs/tags/${fork_tag}"
+          echo "Pushed main and ${fork_tag}; fork-release.yml takes it from here."
+
+      - name: Report dry run
+        if: steps.plan.outputs.skip == 'false' && env.DRY_RUN == 'true'
+        run: |
+          echo "Dry run: ${UPSTREAM_TAG} merges and passes every check; nothing was pushed."
+
+      - name: Keep upstream workflows disabled
+        id: disable
+        if: ${{ !cancelled() && env.DRY_RUN != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow list --all --json id,path,state \
+            --jq '.[] | select(.state == "active") | "\(.id) \(.path)"' |
+            while read -r id path; do
+              case "$path" in
+                .github/workflows/fork-*) ;;
+                .github/workflows/*)
+                  echo "Disabling $path"
+                  gh workflow disable "$id"
+                  ;;
+              esac
+            done
+
+      - name: Open an issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FAILED_STEP: >-
+            ${{ steps.token.outcome == 'failure' && 'the SYNC_TOKEN secret is missing'
+            || steps.upstream.outcome == 'failure' && 'finding the upstream release'
+            || steps.merge.outcome == 'failure' && 'merging the upstream release (a conflict, or new upstream workflow files)'
+            || steps.install.outcome == 'failure' && 'installing dependencies'
+            || steps.lint.outcome == 'failure' && 'lint and type check'
+            || steps.test.outcome == 'failure' && 'the test suite'
+            || steps.build.outcome == 'failure' && 'the build'
+            || steps.push.outcome == 'failure' && 'pushing main and the tag'
+            || steps.disable.outcome == 'failure' && 'disabling upstream workflows'
+            || 'an unexpected step' }}
+          PUSHED: ${{ steps.push.outcome == 'success' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          tag="${UPSTREAM_TAG:-the latest upstream release}"
+          title="Upstream sync failed: ${tag}"
+          if [ "$PUSHED" = "true" ]; then
+            pushed_note="main and the release tag were pushed before this step failed."
+          else
+            pushed_note="Nothing was pushed."
+          fi
+          body_file="$(mktemp)"
+          {
+            echo "Syncing ${tag} from ${UPSTREAM_REPO} stopped at **${FAILED_STEP}**. ${pushed_note}"
+            echo
+            if [ -s "$RUNNER_TEMP/conflicts.txt" ]; then
+              echo "Conflicting files:"
+              echo
+              # shellcheck disable=SC2016 # the backticks are Markdown, not a command
+              sed 's/^/- `/; s/$/`/' "$RUNNER_TEMP/conflicts.txt"
+              echo
+            fi
+            if [ -s "$RUNNER_TEMP/new-workflows.txt" ]; then
+              echo "New upstream workflow files (review them, merge by hand, then disable any you don't want):"
+              echo
+              # shellcheck disable=SC2016 # the backticks are Markdown, not a command
+              sed 's/^/- `/; s/$/`/' "$RUNNER_TEMP/new-workflows.txt"
+              echo
+            fi
+            echo "Run: ${RUN_URL}"
+            echo
+            echo "Fix it locally (merge the upstream tag into main and push), then run this workflow again, or let the next scheduled run pick it up."
+          } > "$body_file"
+          # The title holds only a validated tag, so it is safe inside the jq string.
+          number="$(gh issue list --state open --search "\"${title}\" in:title" --json number,title \
+            --jq "map(select(.title == \"${title}\")) | .[0].number // empty")"
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body-file "$body_file"
+          else
+            gh issue create --title "$title" --body-file "$body_file"
+          fi

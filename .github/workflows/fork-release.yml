@@ -1,0 +1,88 @@
+name: Fork - Release
+
+# Builds the extension for Chrome, Edge and Firefox and publishes the zips on this
+# repository's Releases page.
+#
+# Runs for tags named v<version>-fork.<n>, e.g. v1.59.3-fork.1. The sync workflow
+# (fork-sync-upstream.yml) pushes those after merging an upstream release; push
+# one by hand to release fork-only changes. Plain upstream tags such as v1.59.3
+# never trigger it.
+
+on:
+  push:
+    tags:
+      - "v*-fork.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing fork tag to (re)build, e.g. v1.59.3-fork.1"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fork-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      UPSTREAM_REPO: mengxi-ream/read-frog
+      WXT_SKIP_ENV_VALIDATION: true
+      SKIP_ENV_VALIDATION: true
+      HUSKY: 0
+    steps:
+      - name: Check tag name
+        run: |
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-fork\.[0-9]+$ ]]; then
+            echo "::error::Tag '$TAG' is not of the form v<major>.<minor>.<patch>-fork.<n>"
+            exit 1
+          fi
+
+      - name: Checkout tag
+        uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          persist-credentials: false
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v3
+        with:
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and zip
+        run: pnpm zip:all
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          upstream_tag="${TAG%-fork.*}"
+          version="$(node -p "require('./package.json').version")"
+
+          notes_file="$(mktemp)"
+          {
+            echo "Personal build of Read Frog ${version}, without the readfrog.app account, built-in AI or vendor promotions."
+            echo
+            echo "Based on upstream [${upstream_tag}](https://github.com/${UPSTREAM_REPO}/releases/tag/${upstream_tag})."
+            echo
+            echo "Install: download the zip for your browser, unzip it, and load the folder with \"Load unpacked\" (developer mode)."
+          } > "$notes_file"
+
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --verify-tag --title "$TAG" --notes-file "$notes_file"
+          fi
+
+          gh release upload "$TAG" \
+            .output/*-chrome.zip .output/*-edge.zip .output/*-firefox.zip .output/*-sources.zip \
+            --clobber
