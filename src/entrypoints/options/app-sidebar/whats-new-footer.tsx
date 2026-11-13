@@ -85,7 +85,6 @@ export function WhatsNewFooter() {
     isLastViewedDateFetched &&
     isLatestBlogPostFetched &&
     !holdsPromotionBack &&
-    !isHiddenAccountPost(latestBlogPost) && // fork:account-off
     hasNewBlogPost(lastViewedDate ?? null, latestBlogPostDate)
 
   useEffect(() => {

@@ -19,8 +19,8 @@ import {
   MAX_CUSTOM_ACTION_LAYOUT_LENGTH,
   selectionToolbarCustomActionOutputTypeSchema,
 } from "@/types/config/selection-toolbar"
+import { filterAccountFeaturesFromAiPrompt } from "@/utils/account-features/ai-config-helper-prompt" // fork:account-off
 import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
-import { accountFeatureCopy } from "@/utils/account-features/ui-policy" // fork:account-off
 import {
   getSelectionToolbarCustomActionTokenCellText,
   isSelectionOutputField,
@@ -159,10 +159,7 @@ function en(key: UiLabelKey) {
 
 function buildUiLabelGlossary(uiLocale: SupportedUiLocale, uiLanguage: string) {
   if (uiLocale === "en") return ""
-  // fork:account-off
-  const rows = UI_LABEL_KEYS.filter(
-    (key) => ACCOUNT_FEATURES_ENABLED || !key.endsWith(".notebase"),
-  ).map((key) => `- ${en(key)} → ${i18n.t(key)}`)
+  const rows = UI_LABEL_KEYS.map((key) => `- ${en(key)} → ${i18n.t(key)}`)
   return `My Read Frog interface is in ${uiLanguage}, so the editor shows these labels instead of the English ones used below. Use the ones on the right when you tell me where to click or paste:
 ${rows.join("\n")}
 `
@@ -199,9 +196,8 @@ function buildCurrentAction(
     const name = fieldNameById.get(mapping.localFieldId)
     return name === undefined ? [] : [`\`${name}\``]
   })
-  // fork:account-off
   const notebase =
-    ACCOUNT_FEATURES_ENABLED && mappedFields.length > 0
+    ACCOUNT_FEATURES_ENABLED && mappedFields.length > 0 // fork:account-off
       ? `\nThis action saves results to a Notebase, from these fields: ${mappedFields.join(", ")}. Deleting one of them, or changing its type, breaks that mapping and I'd have to map it again in the Notebase tab. Renaming is fine.`
       : ""
 
@@ -258,8 +254,8 @@ export function buildAiConfigHelperPrompt({
     label(`${TEMPLATES}.improveWriting.name`),
   ].join(", ")
 
-  // fork:account-off — unavailable account instructions remain in the enabled copy.
-  return `# Help me set up a custom AI action in Read Frog
+  return filterAccountFeaturesFromAiPrompt(
+    `# Help me set up a custom AI action in Read Frog
 
 I use Read Frog (陪读蛙), a browser extension for reading and learning languages on the web. It lets me create **custom AI actions**: buttons that send the text I select on a page to an AI model and show a structured answer in a popup. I'd like your help configuring one. You can't see my extension, so you'll design the settings and I'll copy them in by hand. Everything you need is below: how actions work, every setting and its rules, the layout language, and the action I have open.
 
@@ -297,7 +293,7 @@ ${buildTokenList(targetLanguage)}
 
 ## The settings
 
-${accountFeatureCopy(`The editor has two tabs: Config (every setting below, in this order) and Notebase.`, `The editor contains the Config settings below, in this order.`)}
+The editor has two tabs: Config (every setting below, in this order) and Notebase.
 
 ### Name
 The tooltip of the action's button in the selection toolbar. Required, and unique among my custom actions.
@@ -306,8 +302,8 @@ The tooltip of the action's button in the selection toolbar. Required, and uniqu
 An Iconify icon id, \`prefix:name\`, e.g. \`tabler:bulb\`, \`tabler:language\`, \`tabler:school\`. Any icon from https://icon-sets.iconify.design works; prefer the Tabler set (\`tabler:\`), and only suggest ids you're confident exist.
 
 ### Provider
-${accountFeatureCopy(`Which AI model runs the action: Read Frog's built-in AI, or one of the providers I've set up with my own API key. The model must support structured output. I pick it myself; if the task needs a strong model (careful reasoning, long JSON inside a string), tell me.`, `Which AI model runs the action: one of the providers I've set up. The model must support structured output. I pick it myself.`)}
-${accountFeatureCopy(`With Read Frog's built-in AI: the Prompt must not be empty, the System prompt must stay under ${HOSTED_LIMITS.instructions.toLocaleString("en")} characters once the tokens are filled in and the output contract is appended, the filled-in Prompt under ${HOSTED_LIMITS.prompt.toLocaleString("en")}, and there can be at most ${HOSTED_LIMITS.fields} output fields with names of at most ${HOSTED_LIMITS.fieldName} characters.`, ``)}
+Which AI model runs the action: Read Frog's built-in AI, or one of the providers I've set up with my own API key. The model must support structured output. I pick it myself; if the task needs a strong model (careful reasoning, long JSON inside a string), tell me.
+With Read Frog's built-in AI: the Prompt must not be empty, the System prompt must stay under ${HOSTED_LIMITS.instructions.toLocaleString("en")} characters once the tokens are filled in and the output contract is appended, the filled-in Prompt under ${HOSTED_LIMITS.prompt.toLocaleString("en")}, and there can be at most ${HOSTED_LIMITS.fields} output fields with names of at most ${HOSTED_LIMITS.fieldName} characters.
 
 ### System prompt
 The model's instructions: its role, the goal, rules, and one or two short examples, which help a lot with consistent output. Tokens are allowed. Good practice:
@@ -324,15 +320,15 @@ The fields of the JSON object the model returns, in order. At least one. Each ha
 - **Field name**: the JSON key, and the label the default layout shows above the value, so name it in the language I read. Unique within the action. ${reservedNames} are reserved in layouts; don't use them.
 - **Field type**: ${fieldTypes}. There is no boolean, array or object type. For a list or anything structured, use a \`string\` field whose description asks for **a compact JSON array serialized as a string**, spells out each item's keys, and gives a one-line example; the layout parses it with \`parse_json\`. For yes/no or a category, use a \`string\` with fixed values listed in the description. A \`number\` field reaches the layout as a real number.
 - **Description**: exactly what goes in the field, and in which language. Tokens are allowed.
-${accountFeatureCopy(`A field that holds the selected text itself (the built-in Sentence Analysis and Improve Writing start with one, so the Notebase keeps the sentence) is filled in by Read Frog and never sent to the model: keep it as it is, and leave it out of the System prompt.`, `A field that holds the selected text itself is filled in by Read Frog and never sent to the model: keep it as it is, and leave it out of the System prompt.`)}
+A field that holds the selected text itself (the built-in Sentence Analysis and Improve Writing start with one, so the Notebase keeps the sentence) is filled in by Read Frog and never sent to the model: keep it as it is, and leave it out of the System prompt.
 Fields stream in this order, so put what I want to read first at the top. Fewer fields make faster, more reliable answers; aim for no more than about eight. Any value may come back empty.
 In the editor, ${addField} adds a field, clicking a field edits it, and each field can be deleted. Renaming a field there also updates the layout's references to it.
 
 ### Layout
 How the result looks in the popup: HTML with Liquid, described in "Layout reference". ${edit} opens a code editor with a live preview on sample data (and lint messages); ${reset} replaces the layout with the default field list (or, when the fields fit, a Dictionary or Sentence analysis card). An empty layout shows the default field list: each field's name above its value. The default is often enough; write a layout when it clearly helps, e.g. a headword card, highlights on the selected text, a list or table, badges.
 
-${accountFeatureCopy(`### Notebase tab`, ``)}
-${accountFeatureCopy(`Optionally saves every result as a row in one of my Notebases (Read Frog's online notes and flashcards; needs a readfrog.app account). I choose the Notebase and map output fields to its columns myself; you can't set that up. If I want to save results, plan one field per column, with \`number\` fields for number columns.`, ``)}
+### Notebase tab
+Optionally saves every result as a row in one of my Notebases (Read Frog's online notes and flashcards; needs a readfrog.app account). I choose the Notebase and map output fields to its columns myself; you can't set that up. If I want to save results, plan one field per column, with \`number\` fields for number columns.
 
 ## Layout reference
 
@@ -379,7 +375,7 @@ A layout is HTML with Liquid (the liquidjs flavor of Shopify's template language
 ### Streaming, errors and limits
 - The layout renders many times while the answer streams: fields arrive in schema order and strings grow. Guard every field with \`{% if %}\`, show a placeholder or skeleton for what hasn't arrived (\`f.pending\`, \`ctx.status\`, \`:host([data-status=streaming])\`), and never assume a later field exists yet.
 - The layout source can be at most ${MAX_CUSTOM_ACTION_LAYOUT_LENGTH.toLocaleString("en")} characters; the rendered HTML at most ${LAYOUT_MAX_RENDERED_LENGTH.toLocaleString("en")} characters and ${LAYOUT_MAX_ELEMENTS.toLocaleString("en")} elements, and a render must finish within ${LAYOUT_DEFAULT_RENDER_BUDGET.renderLimitMs}ms. A layout with a syntax error, or one that breaks a limit, falls back to the default field list, and the layout editor shows why.
-${accountFeatureCopy(`- Every field should appear in the layout unless it exists only for the Notebase; the editor lists fields a layout leaves out.`, `- Every field should appear in the layout; the editor lists fields a layout leaves out.`)}
+- Every field should appear in the layout unless it exists only for the Notebase; the editor lists fields a layout leaves out.
 
 ### Example
 Output fields:
@@ -399,5 +395,7 @@ I copy each setting into the editor by hand, so:
 - **New action**: tell me to click ${addAction} and pick ${blank} (or ${templateNames}, if one is a closer start), then fill in the settings. The ${blank} template starts with one field named ${defaultField}; tell me to rename or delete it.
 - Don't invent features that aren't described here: actions can't call other actions, fetch web pages, remember earlier runs or run JavaScript.
 
-${buildCurrentAction(action, otherActionNames)}`
+${buildCurrentAction(action, otherActionNames)}`,
+    uiLocale,
+  ) // fork:account-off
 }

@@ -149,15 +149,56 @@ it("subtitle sidebar explains missing subtitles without offering hosted AI gener
     expect(toast).toHaveBeenCalledWith("subtitles.errors.noSubtitlesFound", expect.anything()),
   )
 })
-it("AI helper prompt describes only available settings, including a previously connected action", () => {
-  const action = getSelectionToolbarActions(DEFAULT_CONFIG.selectionToolbar)[0]!
-  const prompt = buildAiConfigHelperPrompt({
-    action,
-    otherActionNames: [],
-    uiLocale: "en",
-    targetCode: "en",
-  })
-  expect(prompt).not.toMatch(/Notebase|readfrog\.app account|Read Frog's built-in AI/i)
-  expect(prompt).toContain("### System prompt")
-  expect(prompt).toContain("## Layout reference")
-})
+it.each(["en", "zh-CN"] as const)(
+  "AI helper prompt keeps model advice and hides account settings in %s with a connected action",
+  (uiLocale) => {
+    const action = structuredClone(getSelectionToolbarActions(DEFAULT_CONFIG.selectionToolbar)[0]!)
+    action.notebaseConnection = {
+      notebaseId: "notes",
+      notebaseNameSnapshot: "My notes",
+      connectedAccount: { id: "user", name: "Reader", email: "reader@example.com" },
+      mappings: [
+        {
+          id: "mapping",
+          localFieldId: action.outputSchema[0]!.id,
+          notebaseColumnId: "column",
+          notebaseColumnNameSnapshot: "Meaning",
+        },
+      ],
+    }
+    const prompt = buildAiConfigHelperPrompt({
+      action,
+      otherActionNames: [],
+      uiLocale,
+      targetCode: "en",
+    })
+    expect(prompt).not.toMatch(/Notebase|built-in AI|readfrog\.app/i)
+    expect(prompt).toContain(
+      "if the task needs a strong model (careful reasoning, long JSON inside a string), tell me.",
+    )
+    expect(prompt.includes("these labels instead of the English ones")).toBe(uiLocale !== "en")
+    expect(prompt.includes("options.selectionToolbar.customActions.tabs.config")).toBe(
+      uiLocale !== "en",
+    )
+    expect(prompt).toContain("### System prompt")
+    expect(prompt).toContain("## Layout reference")
+  },
+)
+
+it.each(["en", "zh-CN"] as const)(
+  "AI helper prompt preserves user-authored account wording and unrelated settings in %s",
+  (uiLocale) => {
+    const action = structuredClone(getSelectionToolbarActions(DEFAULT_CONFIG.selectionToolbar)[0]!)
+    action.prompt =
+      "Describe the readfrog.app account and Notebase.\n- options.selectionToolbar.customActions.tabs.notebase@en → my own prose"
+    const prompt = buildAiConfigHelperPrompt({
+      action,
+      otherActionNames: [],
+      uiLocale,
+      targetCode: "en",
+    })
+    expect(prompt).toContain(action.prompt)
+    expect(prompt).toContain("### Output schema")
+    expect(prompt).toContain("### Streaming, errors and limits")
+  },
+)

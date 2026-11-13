@@ -1,15 +1,24 @@
 import type { Config } from "@/types/config/config"
+import type { VersionTestData } from "@/utils/config/__tests__/example/types"
+import { readdirSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 import { describe, expect, it, vi } from "vitest"
 import { configSchema } from "@/types/config/config"
-import { testSeries } from "@/utils/config/__tests__/example/v123"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
 import {
   BUILT_IN_AI_PROVIDER_ID,
   BUILT_IN_AI_ADVANCE_PROVIDER_ID,
 } from "@/utils/constants/provider-ids"
+import { DEFAULT_PROVIDER_CONFIG } from "@/utils/constants/providers"
 import { remapHiddenProviderRefs } from "../remap-hidden-providers"
 
 vi.mock("../flag", () => ({ ACCOUNT_FEATURES_ENABLED: false }))
+
+const exampleModules = import.meta.glob<VersionTestData>("@/utils/config/__tests__/example/v*.ts")
+const latestExample = Object.keys(exampleModules).sort(
+  (a, b) => Number(b.match(/v(\d+)\.ts$/)![1]) - Number(a.match(/v(\d+)\.ts$/)![1]),
+)[0]!
+const { testSeries } = await exampleModules[latestExample]!()
 
 const free = BUILT_IN_AI_PROVIDER_ID
 const advance = BUILT_IN_AI_ADVANCE_PROVIDER_ID
@@ -294,4 +303,72 @@ describe("config schema is lenient before remapping", () => {
       }
     },
   )
+  function expectReparseInvariant(input: unknown) {
+    const parsedOnce = configSchema.safeParse(input)
+    expect(parsedOnce.success).toBe(true)
+    if (!parsedOnce.success) return
+    const parsedTwice = configSchema.safeParse(parsedOnce.data)
+    expect(parsedTwice.success).toBe(true)
+    if (!parsedTwice.success) return
+    expect(parsedTwice.data).toEqual(parsedOnce.data)
+    expect(remapHiddenProviderRefs(parsedOnce.data)).toBe(parsedOnce.data)
+  }
+
+  it.each([
+    "defaults",
+    "no enabled provider",
+    "usable LLM",
+    "keyless local LLM",
+    "translationOnly with Google",
+    "translationOnly with Microsoft only",
+  ])("re-parse invariant holds for hosted config: %s", (variant) => {
+    expect.assertions(4)
+    const c = hostedConfig()
+    if (variant === "no enabled provider") {
+      c.providersConfig.forEach((p) => {
+        p.enabled = false
+      })
+    }
+    if (variant === "usable LLM") {
+      Object.assign(
+        c.providersConfig.find((p) => p.provider === "openai")!,
+        { enabled: true, apiKey: "key" },
+      )
+    }
+    if (variant === "keyless local LLM") {
+      c.providersConfig.push({ ...structuredClone(DEFAULT_PROVIDER_CONFIG.ollama), enabled: true })
+    }
+    if (variant.startsWith("translationOnly")) {
+      c.pageTranslation.mode = "translationOnly"
+      c.providersConfig = c.providersConfig.filter(
+        (p) =>
+          p.provider === "microsoft-translate" ||
+          (variant.endsWith("Google") && p.provider === "google-translate"),
+      )
+      c.providersConfig.forEach((p) => {
+        p.enabled = true
+      })
+    }
+    expectReparseInvariant(c)
+  })
+
+  it.each(Object.entries(testSeries))(
+    "re-parse invariant holds for latest fixture %s",
+    (_name, { config }) => {
+      expect.assertions(4)
+      expectReparseInvariant(config)
+    },
+  )
+})
+
+it("uses the highest-numbered config example module", async () => {
+  const directory = new URL("../../config/__tests__/example/", import.meta.url)
+  const latestVersion = Math.max(
+    ...readdirSync(fileURLToPath(directory)).flatMap((name) => {
+      const match = /^v(\d+)\.ts$/.exec(name)
+      return match ? [Number(match[1])] : []
+    }),
+  )
+  const newest = await exampleModules[`/src/utils/config/__tests__/example/v${latestVersion}.ts`]!()
+  expect(testSeries).toBe(newest.testSeries)
 })

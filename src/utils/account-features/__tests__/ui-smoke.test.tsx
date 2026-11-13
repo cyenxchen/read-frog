@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import { createStore, Provider } from "jotai"
 import { MemoryRouter } from "react-router"
 import { afterEach, expect, it, vi } from "vitest"
+import { browser } from "#imports"
 import { AppSidebar } from "@/entrypoints/options/app-sidebar"
 import { FeaturesNav } from "@/entrypoints/options/app-sidebar/features-nav"
 import { WhatsNewFooter } from "@/entrypoints/options/app-sidebar/whats-new-footer"
@@ -18,6 +19,7 @@ import { VideoSubtitlesPage } from "@/entrypoints/options/pages/video-subtitles"
 import Popup from "@/entrypoints/popup/app"
 import BlogNotification from "@/entrypoints/popup/components/blog-notification"
 import { configAtom } from "@/utils/atoms/config"
+import { getLastViewedBlogDate, saveLastViewedBlogDate } from "@/utils/blog"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
 import { CUSTOM_ACTION_NOTEBASE_SECTION_ID } from "@/utils/navigation"
 
@@ -242,5 +244,15 @@ it("promotional posts disappear from the footer and popup notification", () => {
     </>,
     "promotion",
   )
+  expect(container).toBeEmptyDOMElement()
+})
+
+it("marks a promotional post read without rendering its footer", async () => {
+  vi.spyOn(browser.i18n, "getUILanguage").mockReturnValue("en")
+  await saveLastViewedBlogDate(new Date("2026-01-01T00:00:00Z"))
+  const { container } = mount(<WhatsNewFooter />, "promotion")
+  await waitFor(async () => {
+    expect(await getLastViewedBlogDate()).toEqual(new Date("2026-11-13T00:00:00Z"))
+  })
   expect(container).toBeEmptyDOMElement()
 })
