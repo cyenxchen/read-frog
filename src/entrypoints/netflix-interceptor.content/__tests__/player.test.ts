@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 
-import type { TrackLanguagePreference } from "@/utils/subtitles/track-language"
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   NETFLIX_LOAD_POST_MESSAGE_TIMEOUT_MS,
@@ -90,7 +89,7 @@ afterEach(() => {
 
 function request(
   action: "state" | "load" | "restore",
-  preference?: TrackLanguagePreference | null,
+  preferredTrackId?: string | null,
 ): Promise<any> {
   return new Promise((resolve) => {
     const requestId = Math.random().toString()
@@ -106,7 +105,7 @@ function request(
     window.addEventListener("message", handler)
     window.dispatchEvent(
       new MessageEvent("message", {
-        data: { type: NETFLIX_SUBTITLES_REQUEST_TYPE, requestId, action, preference },
+        data: { type: NETFLIX_SUBTITLES_REQUEST_TYPE, requestId, action, preferredTrackId },
         origin: window.location.origin,
       }),
     )
@@ -155,17 +154,27 @@ describe("Netflix player requests", () => {
   })
 })
 
-describe("Netflix player requests by language settings", () => {
+describe("Netflix player requests for a track picked by language", () => {
   const ZH_HANS = track("zh-Hans", "zh-Hans")
-  const toChinese = { target: "zh-Hans", source: null } as const
 
   beforeEach(() => {
     tracks = [OFF, ZH, EN, ZH_HANS]
     current = EN
   })
 
-  it("switches to the target-language track and names its language", async () => {
-    await expect(request("load", toChinese)).resolves.toMatchObject({
+  it("lists the tracks it can translate, for the content script to pick from", async () => {
+    await expect(request("state")).resolves.toMatchObject({
+      trackId: "en",
+      tracks: [
+        { trackId: "zh-Hant", bcp47: "zh-Hant" },
+        { trackId: "en", bcp47: "en" },
+        { trackId: "zh-Hans", bcp47: "zh-Hans" },
+      ],
+    })
+  })
+
+  it("switches to the picked track and names its language", async () => {
+    await expect(request("load", "zh-Hans")).resolves.toMatchObject({
       trackId: "zh-Hans",
       language: "zh-Hans",
     })
@@ -173,38 +182,30 @@ describe("Netflix player requests by language settings", () => {
   })
 
   it("puts the viewer's track back on restore and leaves it there on the next load", async () => {
-    await request("load", toChinese)
-    await request("restore")
+    await request("load", "zh-Hans")
+    await expect(request("restore")).resolves.toMatchObject({ trackId: "en" })
     expect(current).toBe(EN)
 
     // The track poll reloads after a restore; it must not switch the player back.
-    await expect(request("load", toChinese)).resolves.toMatchObject({ trackId: "en" })
+    await expect(request("load", "zh-Hans")).resolves.toMatchObject({ trackId: "en" })
     expect(current).toBe(EN)
   })
 
   it("keeps a track the viewer picks after Read Frog switched by language", async () => {
-    await request("load", toChinese)
+    await request("load", "zh-Hans")
     current = ZH
 
-    await expect(request("load", toChinese)).resolves.toMatchObject({ trackId: "zh-Hant" })
+    await expect(request("load", "zh-Hans")).resolves.toMatchObject({ trackId: "zh-Hant" })
     expect(current).toBe(ZH)
   })
 
-  it("switches to the source-language track when the target language is missing", async () => {
-    current = ZH
-
-    await expect(request("load", { target: "ja", source: "en" })).resolves.toMatchObject({
-      trackId: "en",
-    })
-  })
-
-  it("never switches to a forced-narrative track", async () => {
+  it("never switches to a track it cannot translate", async () => {
     tracks = [OFF, EN, track("forced", "zh-Hans", { forced: true })]
 
-    await expect(request("load", toChinese)).resolves.toMatchObject({ trackId: "en" })
+    await expect(request("load", "forced")).resolves.toMatchObject({ trackId: "en" })
   })
 
-  it("keeps the viewer's track without a preference", async () => {
+  it("keeps the viewer's track without a pick", async () => {
     await expect(request("load", null)).resolves.toMatchObject({ trackId: "en" })
   })
 })

@@ -11,6 +11,7 @@ import {
 import { i18n } from "@/utils/i18n"
 import { NoSubtitlesError, OverlaySubtitlesError } from "@/utils/subtitles/errors"
 import { readTrackLanguagePreference } from "@/utils/subtitles/read-track-language-preference"
+import { pickByLanguage } from "@/utils/subtitles/track-language"
 import { postMessageRequest } from "../post-message-request"
 import { parseNetflixTtml } from "./ttml"
 
@@ -23,6 +24,8 @@ const netflixSubtitlesResponseSchema = z.object({
   trackId: z.string().nullable(),
   /** The track's `bcp47`, which is what a track picked by language was matched on. */
   language: z.string().nullable().optional(),
+  /** The tracks the player can translate, for picking one by language here. */
+  tracks: z.array(z.object({ trackId: z.string(), bcp47: z.string().nullable() })).optional(),
   translatable: z.boolean(),
   ttml: z.string().nullable(),
 })
@@ -31,11 +34,15 @@ export type NetflixSubtitlesResponse = z.infer<typeof netflixSubtitlesResponseSc
 
 async function requestNetflixSubtitles(
   action: NetflixSubtitlesAction,
-  preference: TrackLanguagePreference | null = null,
+  preferredTrackId: string | null = null,
 ): Promise<NetflixSubtitlesResponse | null> {
   const response = await postMessageRequest(
     NETFLIX_SUBTITLES_RESPONSE_TYPE,
-    { type: NETFLIX_SUBTITLES_REQUEST_TYPE, action, ...(preference ? { preference } : {}) },
+    {
+      type: NETFLIX_SUBTITLES_REQUEST_TYPE,
+      action,
+      ...(preferredTrackId ? { preferredTrackId } : {}),
+    },
     action === "load" ? NETFLIX_LOAD_POST_MESSAGE_TIMEOUT_MS : POST_MESSAGE_TIMEOUT_MS,
   )
   const parsed = netflixSubtitlesResponseSchema.safeParse(response)
@@ -48,14 +55,20 @@ export class NetflixSubtitlesFetcher implements SubtitlesFetcher {
   // What the latest load found, even one that ended without subtitles.
   private lastLoad: { movieId: number | null; trackId: string | null } | null = null
   private loadsInFlight = 0
+  // The track our own restore put back. The poll sees it as a change, but it is not the viewer's:
+  // reloading then would translate it, and turning Read Frog on again would not get the
+  // target-language session back.
+  private restoredTrackId: string | null = null
 
   async fetch(): Promise<SubtitlesFragment[]> {
     let response: NetflixSubtitlesResponse | null
     let preference: TrackLanguagePreference | null = null
     this.loadsInFlight++
+    this.restoredTrackId = null
     try {
       preference = await readTrackLanguagePreference()
-      response = await requestNetflixSubtitles("load", preference)
+      const preferredTrackId = preference ? await pickTrackByLanguage(preference) : null
+      response = await requestNetflixSubtitles("load", preferredTrackId)
     } finally {
       this.loadsInFlight--
     }
@@ -128,16 +141,37 @@ export class NetflixSubtitlesFetcher implements SubtitlesFetcher {
     if (response.movieId !== lastLoad.movieId) {
       return false
     }
-    return !response.translatable || response.trackId === lastLoad.trackId
+    return (
+      !response.translatable ||
+      response.trackId === lastLoad.trackId ||
+      (this.restoredTrackId !== null && response.trackId === this.restoredTrackId)
+    )
   }
 
   showNativeSubtitles(): void {
-    void requestNetflixSubtitles("restore")
+    const loaded = this.lastLoad
+    void requestNetflixSubtitles("restore").then((response) => {
+      if (response && loaded && response.movieId === loaded.movieId) {
+        this.restoredTrackId = response.trackId
+      }
+    })
   }
 
   cleanup(): void {
     this.subtitles = []
     this.sourceLanguage = ""
     this.lastLoad = null
+    this.restoredTrackId = null
   }
+}
+
+// Picked here, not in the page script, so the language tables stay out of every Netflix page.
+async function pickTrackByLanguage(preference: TrackLanguagePreference): Promise<string | null> {
+  const state = await requestNetflixSubtitles("state")
+  const picked = pickByLanguage(state?.tracks ?? [], preference, (track) => ({
+    locale: track.bcp47,
+    kind: "human",
+    selected: track.trackId === state?.trackId,
+  }))
+  return picked?.trackId ?? null
 }

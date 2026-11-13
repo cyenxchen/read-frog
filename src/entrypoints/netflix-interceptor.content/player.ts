@@ -2,8 +2,6 @@ import type {
   NetflixSubtitlesAction,
   NetflixSubtitlesResponse,
 } from "@/utils/subtitles/fetchers/netflix"
-import type { TrackLanguagePreference } from "@/utils/subtitles/track-language"
-import { resolveLanguage } from "@read-frog/definitions"
 import {
   NETFLIX_LOAD_TIMEOUT_MS,
   NETFLIX_SUBTITLES_REQUEST_TYPE,
@@ -12,7 +10,6 @@ import {
   NETFLIX_PAGE_WAIT_TIMEOUT_MS,
 } from "@/utils/constants/subtitles"
 import { pollUntil } from "@/utils/poll"
-import { pickByLanguage } from "@/utils/subtitles/track-language"
 import { findCapturedTtml } from "./ttml-capture"
 
 interface TimedTextTrack {
@@ -32,16 +29,9 @@ interface NetflixPlayer {
 }
 
 let replacedTrack: { movieId: number; track: TimedTextTrack; pickedTrackId: string } | null = null
+// The content script picks a track by language from the list this page sends it; matching
+// languages here would pull the language tables into every Netflix page.
 let languagePickedMovieId: number | null = null
-
-// Anything on the page can post to this window, so a preference is used only when well formed.
-function parseTrackLanguagePreference(value: unknown): TrackLanguagePreference | null {
-  if (!value || typeof value !== "object") return null
-  const { target, source } = value as Record<string, unknown>
-  const targetTag = typeof target === "string" ? resolveLanguage(target) : null
-  if (!targetTag) return null
-  return { target: targetTag, source: typeof source === "string" ? resolveLanguage(source) : null }
-}
 
 // Each wait gets whatever time is left before the request's deadline.
 function untilDeadline(deadline: number) {
@@ -91,31 +81,28 @@ function switchTrack(player: NetflixPlayer, current: TimedTextTrack | null, next
 
 // Once per title: the track poll reloads after a restore or a track the viewer picks, and
 // switching again then would undo the viewer's choice.
-function pickByLanguageOnce(
+function switchToPickedTrackOnce(
   player: NetflixPlayer,
   current: TimedTextTrack | null,
-  preference: TrackLanguagePreference | null,
+  preferredTrackId: string | null,
 ): TimedTextTrack | null {
   const movieId = player.getMovieId()
-  if (!preference || languagePickedMovieId === movieId) return null
+  if (!preferredTrackId || languagePickedMovieId === movieId) return null
   languagePickedMovieId = movieId
 
-  const tracks = player.getTimedTextTrackList().filter(isTranslatable)
-  const next = pickByLanguage(tracks, preference, (track) => ({
-    locale: track.bcp47,
-    kind: "human",
-    selected: track.trackId === current?.trackId,
-  }))
+  const next = player
+    .getTimedTextTrackList()
+    .find((track) => isTranslatable(track) && track.trackId === preferredTrackId)
   if (next && next.trackId !== current?.trackId) switchTrack(player, current, next)
-  return next
+  return next ?? null
 }
 
 function ensureTranslatableTrack(
   player: NetflixPlayer,
-  preference: TrackLanguagePreference | null,
+  preferredTrackId: string | null,
 ): TimedTextTrack | null {
   const current = player.getTimedTextTrack()
-  const byLanguage = pickByLanguageOnce(player, current, preference)
+  const byLanguage = switchToPickedTrackOnce(player, current, preferredTrackId)
   if (byLanguage) return byLanguage
   if (isTranslatable(current)) return current
 
@@ -134,7 +121,7 @@ function ensureTranslatableTrack(
 async function handleRequest(
   requestId: string,
   action: NetflixSubtitlesAction,
-  preference: TrackLanguagePreference | null,
+  preferredTrackId: string | null,
 ): Promise<NetflixSubtitlesResponse> {
   const response = emptyResponse(requestId)
   // A load shares one deadline between the player and its subtitle file, so the content
@@ -157,10 +144,16 @@ async function handleRequest(
   }
 
   const track =
-    action === "load" ? ensureTranslatableTrack(player, preference) : player.getTimedTextTrack()
+    action === "load"
+      ? ensureTranslatableTrack(player, preferredTrackId)
+      : player.getTimedTextTrack()
   response.movieId = movieId
   response.trackId = track?.trackId ?? null
   response.language = track?.bcp47 ?? null
+  response.tracks = player
+    .getTimedTextTrackList()
+    .filter(isTranslatable)
+    .map(({ trackId, bcp47 }) => ({ trackId, bcp47 }))
   response.translatable = isTranslatable(track)
   if (action === "load" && track && response.translatable) {
     response.ttml = await pollUntil(
@@ -180,9 +173,10 @@ export function listenForSubtitlesRequests(): void {
       return
     }
     const { requestId, action } = event.data
-    const preference = parseTrackLanguagePreference(event.data.preference)
+    const preferredTrackId =
+      typeof event.data.preferredTrackId === "string" ? event.data.preferredTrackId : null
     // Answer even when reading the player throws, so the content script is not left waiting.
-    void handleRequest(requestId, action, preference)
+    void handleRequest(requestId, action, preferredTrackId)
       .catch(() => emptyResponse(requestId))
       .then((response) => window.postMessage(response, window.location.origin))
   })
