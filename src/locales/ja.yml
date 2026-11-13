@@ -1438,6 +1438,9 @@ options:
       pauseOnHover:
         title: ホバーで一時停止
         description: ポインターを字幕の上にしばらく置くと動画を一時停止し、離すと再生を再開します。単語をクリックして調べるときは常に一時停止します。
+      preferLanguageMatchedTrack:
+        title: "言語で字幕を選ぶ"
+        description: "動画に翻訳先の言語の字幕があれば、翻訳せずにそれを使います。なければ翻訳元の言語の字幕を翻訳します。バイリンガル表示では、翻訳先の言語の字幕は1行で表示されます。"
     aiQuota:
       title: AI字幕の利用枠
       description: AIの音声認識で、どんな動画にも正確な字幕を生成します

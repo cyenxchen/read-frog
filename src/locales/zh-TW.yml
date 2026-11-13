@@ -1448,6 +1448,9 @@ options:
       pauseOnHover:
         title: 懸停暫停
         description: 滑鼠在字幕上停留片刻時暫停影片，移開後繼續播放。點擊單字查詢時一律會暫停。
+      preferLanguageMatchedTrack:
+        title: "依語言選擇字幕"
+        description: "影片已有目標語言字幕時直接使用，不再翻譯；沒有時優先翻譯來源語言字幕。雙語模式下，直接使用的目標語言字幕只顯示一行。"
     aiQuota:
       title: AI 字幕額度
       description: AI 利用語音轉文字技術取得任何影片的準確字幕

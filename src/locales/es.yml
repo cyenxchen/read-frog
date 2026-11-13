@@ -1443,6 +1443,9 @@ options:
       pauseOnHover:
         title: Pausar al pasar el cursor
         description: Pausa el vídeo mientras el puntero se detiene sobre los subtítulos y lo reanuda al apartarlo. Hacer clic en una palabra para buscarla siempre pausa.
+      preferLanguageMatchedTrack:
+        title: "Elegir subtítulos por idioma"
+        description: "Usa los subtítulos propios del vídeo en tu idioma de destino en lugar de traducir; si no los hay, traduce los de tu idioma de origen. En modo bilingüe, los subtítulos que ya están en tu idioma de destino se muestran en una sola línea."
     aiQuota:
       title: Cuota de subtítulos con IA
       description: El reconocimiento de voz con IA te da subtítulos precisos para cualquier vídeo

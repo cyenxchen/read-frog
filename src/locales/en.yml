@@ -1585,6 +1585,9 @@ options:
       pauseOnHover:
         title: Pause on hover
         description: Pauses the video while the pointer rests on the subtitles, and plays it again once the pointer leaves. Clicking a word to look it up always pauses.
+      preferLanguageMatchedTrack:
+        title: "Pick subtitles by language"
+        description: "Uses the video's own subtitles in your target language instead of translating; without them, translates the ones in your source language. In bilingual mode, subtitles already in your target language show as one line."
     aiQuota:
       title: AI subtitles quota
       description: AI speech recognition gets you accurate subtitles for any video

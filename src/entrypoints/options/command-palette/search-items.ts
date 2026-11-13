@@ -520,6 +520,13 @@ export const SEARCH_ITEMS: SearchItem[] = [
     pageKey: "options.videoSubtitles.title",
   },
   {
+    sectionId: "subtitles-prefer-language-matched-track",
+    route: "/video-subtitles",
+    titleKey: "options.videoSubtitles.preference.preferLanguageMatchedTrack.title",
+    descriptionKey: "options.videoSubtitles.preference.preferLanguageMatchedTrack.description",
+    pageKey: "options.videoSubtitles.title",
+  },
+  {
     sectionId: "subtitles-ai-quota",
     route: "/video-subtitles",
     titleKey: "options.videoSubtitles.aiQuota.title",

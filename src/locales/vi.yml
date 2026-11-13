@@ -1438,6 +1438,9 @@ options:
       pauseOnHover:
         title: Tạm dừng khi di chuột
         description: Tạm dừng video khi con trỏ dừng trên phụ đề và phát tiếp khi con trỏ rời đi. Nhấp vào một từ để tra luôn tạm dừng video.
+      preferLanguageMatchedTrack:
+        title: "Chọn phụ đề theo ngôn ngữ"
+        description: "Dùng phụ đề sẵn có của video bằng ngôn ngữ đích thay vì dịch; nếu không có, dịch phụ đề bằng ngôn ngữ nguồn. Ở chế độ song ngữ, phụ đề đã ở ngôn ngữ đích chỉ hiển thị một dòng."
     aiQuota:
       title: Hạn mức phụ đề AI
       description: AI dùng công nghệ nhận dạng giọng nói để tạo phụ đề chính xác cho mọi video

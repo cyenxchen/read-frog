@@ -1443,6 +1443,9 @@ options:
       pauseOnHover:
         title: Üzərinə gələndə dayandır
         description: Göstərici altyazıların üzərində bir müddət qalanda videonu dayandırır, göstərici çəkiləndə oxutmaya davam edir. Axtarmaq üçün sözə klikləmək həmişə dayandırır.
+      preferLanguageMatchedTrack:
+        title: "Altyazını dilə görə seç"
+        description: "Videonun hədəf dilinizdəki öz altyazısını tərcümə etmədən istifadə edir; yoxdursa, mənbə dilinizdəki altyazını tərcümə edir. İkidilli rejimdə artıq hədəf dilinizdə olan altyazı bir sətirdə göstərilir."
     aiQuota:
       title: Süni intellekt subtitrlərinin kvotası
       description: Süni intellektlə nitqin tanınması istənilən video üçün dəqiq subtitrlər yaradır

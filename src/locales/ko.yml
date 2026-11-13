@@ -1438,6 +1438,9 @@ options:
       pauseOnHover:
         title: 마우스를 올리면 일시정지
         description: 포인터를 자막 위에 잠시 올려 두면 동영상을 일시정지하고, 포인터를 치우면 다시 재생합니다. 단어를 클릭해 조회할 때는 항상 일시정지합니다.
+      preferLanguageMatchedTrack:
+        title: "언어로 자막 선택"
+        description: "동영상에 대상 언어 자막이 있으면 번역하지 않고 그대로 사용하고, 없으면 원본 언어 자막을 번역합니다. 이중 언어 모드에서는 그대로 사용하는 대상 언어 자막이 한 줄로 표시됩니다."
     aiQuota:
       title: AI 자막 사용량
       description: AI 음성 인식으로 모든 동영상에 정확한 자막을 만들어 줍니다

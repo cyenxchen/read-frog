@@ -77,10 +77,15 @@ describe("video subtitles page sections", () => {
   it("writes each switch on its own, leaving the other alone", () => {
     renderInRouter(<PreferenceSection />)
 
-    const [enable, aiSegmentation, pauseOnHover] = screen.getAllByRole("switch")
+    const [enable, languageMatchedTrack, aiSegmentation, pauseOnHover] =
+      screen.getAllByRole("switch")
 
     fireEvent.click(enable!)
     expect(setVideoSubtitlesMock).toHaveBeenCalledWith({ enabled: false })
+
+    expect(languageMatchedTrack).not.toBeChecked()
+    fireEvent.click(languageMatchedTrack!)
+    expect(setVideoSubtitlesMock).toHaveBeenCalledWith({ preferLanguageMatchedTrack: true })
 
     fireEvent.click(aiSegmentation!)
     expect(setVideoSubtitlesMock).toHaveBeenCalledWith({ aiSegmentation: true })
