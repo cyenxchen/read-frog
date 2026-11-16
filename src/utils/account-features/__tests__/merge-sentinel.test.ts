@@ -114,6 +114,7 @@ it("keeps the account-client import inventory reviewed", () => {
     "utils/orpc/client.ts",
     "utils/subtitles/ai/access-guard.ts",
     "utils/subtitles/ai/request-ai-subtitles.ts",
+    "utils/survey-prompt.ts",
   ])
 })
 
