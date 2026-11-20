@@ -1,3 +1,4 @@
+import { env } from "@/env"
 import { CUSTOM_ACTION_NOTEBASE_SECTION_ID } from "@/utils/navigation"
 import { ACCOUNT_FEATURES_ENABLED } from "./flag"
 
@@ -5,16 +6,30 @@ export function shouldOpenInstallGuide(): boolean {
   return ACCOUNT_FEATURES_ENABLED
 }
 
+export const SHOW_ANALYTICS_PREFERENCE =
+  ACCOUNT_FEATURES_ENABLED || Boolean(env.WXT_POSTHOG_HOST && env.WXT_POSTHOG_API_KEY)
+
 export const HIDDEN_ACCOUNT_SECTION_IDS: ReadonlySet<string> = new Set(
   ACCOUNT_FEATURES_ENABLED
     ? []
     : [
         CUSTOM_ACTION_NOTEBASE_SECTION_ID,
+        "beta-experience",
         "google-drive-sync",
+        "selection-speak-shortcut",
         "selection-toolbar-note-suggestion",
         "subtitles-ai-quota",
+        "translation-hub-shortcut",
       ],
 )
+
+export function isHiddenForkSearchItem({ sectionId, route }: { sectionId: string; route: string }) {
+  return (
+    HIDDEN_ACCOUNT_SECTION_IDS.has(sectionId) ||
+    (!ACCOUNT_FEATURES_ENABLED && route === "/tts") ||
+    (!SHOW_ANALYTICS_PREFERENCE && sectionId === "analytics")
+  )
+}
 
 export function isHiddenAccountPost(post: { type?: string } | null | undefined): boolean {
   return !ACCOUNT_FEATURES_ENABLED && post?.type === "promotion"

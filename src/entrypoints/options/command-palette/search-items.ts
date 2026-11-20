@@ -1,4 +1,5 @@
 import type { GeneratedI18nStructure } from "#i18n"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import {
   CUSTOM_ACTION_LAYOUT_SECTION_ID,
   CUSTOM_ACTION_NOTEBASE_SECTION_ID,
@@ -202,7 +203,9 @@ export const SEARCH_ITEMS: SearchItem[] = [
     sectionId: "language-detection",
     route: "/api-providers",
     titleKey: "options.apiProviders.languageDetection.title",
-    descriptionKey: "options.apiProviders.languageDetection.description",
+    descriptionKey: ACCOUNT_FEATURES_ENABLED
+      ? "options.apiProviders.languageDetection.description"
+      : undefined,
     pageKey: "options.apiProviders.title",
   },
   {
@@ -415,7 +418,9 @@ export const SEARCH_ITEMS: SearchItem[] = [
     sectionId: "selection-toolbar-toggle",
     route: "/selection-toolbar",
     titleKey: "options.selectionToolbar.enable.title",
-    descriptionKey: "options.selectionToolbar.enable.description",
+    descriptionKey: ACCOUNT_FEATURES_ENABLED
+      ? "options.selectionToolbar.enable.description"
+      : undefined,
     pageKey: "options.selectionToolbar.title",
   },
   {

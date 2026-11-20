@@ -31,7 +31,7 @@ function App() {
             {/* // fork:account-off */}
             {ACCOUNT_FEATURES_ENABLED ? <UserAccountMenuPopup /> : <span />}
             <div className="flex shrink-0 items-center">
-              <TranslationHubButton />
+              {ACCOUNT_FEATURES_ENABLED && <TranslationHubButton />}
               <DiscordButton />
               <BlogNotification />
             </div>

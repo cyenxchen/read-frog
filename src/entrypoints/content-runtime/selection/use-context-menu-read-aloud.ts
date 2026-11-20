@@ -2,11 +2,12 @@ import { useAtomValue } from "jotai"
 import { useEffect, useEffectEvent } from "react"
 import { useTextToSpeech } from "@/hooks/use-text-to-speech"
 import { ANALYTICS_SURFACE } from "@/types/analytics"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { onMessage } from "@/utils/message"
 import { readSelectionSnapshot } from "./utils"
 
-export function useContextMenuReadAloud() {
+function useReadAloud() {
   const ttsConfig = useAtomValue(configFieldsAtomMap.tts)
   const { play } = useTextToSpeech(ANALYTICS_SURFACE.CONTEXT_MENU)
 
@@ -23,3 +24,6 @@ export function useContextMenuReadAloud() {
     })
   }, [])
 }
+
+export const useContextMenuReadAloud =
+  !import.meta.env.PROD && ACCOUNT_FEATURES_ENABLED ? useReadAloud : () => {}

@@ -2,6 +2,7 @@ import type { Browser } from "#imports"
 import type { Config } from "@/types/config/config"
 import { browser, storage } from "#imports"
 import { ANALYTICS_FEATURE, ANALYTICS_SURFACE } from "@/types/analytics"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { createFeatureUsageContext } from "@/utils/analytics"
 import { CONFIG_STORAGE_KEY } from "@/utils/constants/config"
 import {
@@ -167,7 +168,7 @@ async function handleContextMenuClick(
     return
   }
 
-  if (info.menuItemId === MENU_ID_SELECTION_READ_ALOUD) {
+  if (ACCOUNT_FEATURES_ENABLED && info.menuItemId === MENU_ID_SELECTION_READ_ALOUD) {
     await handleSelectionReadAloudClick(info, tab.id)
     return
   }

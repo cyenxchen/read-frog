@@ -1,4 +1,5 @@
 import type { Config } from "@/types/config/config"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import {
   getAnnotationModeShortcut,
   getAnnotationShortcut,
@@ -43,11 +44,15 @@ export function getShortcutBindings(config: Config): ShortcutBinding[] {
       title: i18n.t("options.shortcuts.selectionTranslation.title"),
       shortcut: features.translate.shortcut,
     },
-    {
-      id: "selection-speak-shortcut",
-      title: i18n.t("options.shortcuts.selectionSpeak.title"),
-      shortcut: getSpeakShortcut(features.speak),
-    },
+    ...(ACCOUNT_FEATURES_ENABLED
+      ? [
+          {
+            id: "selection-speak-shortcut",
+            title: i18n.t("options.shortcuts.selectionSpeak.title"),
+            shortcut: getSpeakShortcut(features.speak),
+          },
+        ]
+      : []),
     {
       id: "selection-annotation-shortcut",
       title: i18n.t("options.shortcuts.selectionAnnotation.title"),
@@ -72,11 +77,15 @@ export function getShortcutBindings(config: Config): ShortcutBinding[] {
           },
         ]
       : []),
-    {
-      id: "translation-hub-shortcut",
-      title: i18n.t("options.shortcuts.translationHub.title"),
-      shortcut: config.translationHub.shortcut,
-    },
+    ...(ACCOUNT_FEATURES_ENABLED
+      ? [
+          {
+            id: "translation-hub-shortcut",
+            title: i18n.t("options.shortcuts.translationHub.title"),
+            shortcut: config.translationHub.shortcut,
+          },
+        ]
+      : []),
     ...getSelectionToolbarActions(config.selectionToolbar).map((action) => ({
       id: getActionShortcutId(action.id),
       title: action.name,

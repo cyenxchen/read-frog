@@ -1,5 +1,6 @@
 import { useAtom } from "jotai"
 import { Switch } from "@/components/ui/base-ui/switch"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { i18n } from "@/utils/i18n"
 import { ConfigItem } from "../../components/config-item"
@@ -15,7 +16,9 @@ export function EnableItem() {
     <ConfigItem
       id="selection-toolbar-toggle"
       title={i18n.t("options.selectionToolbar.enable.title")}
-      description={i18n.t("options.selectionToolbar.enable.description")}
+      description={
+        ACCOUNT_FEATURES_ENABLED ? i18n.t("options.selectionToolbar.enable.description") : undefined
+      }
     >
       <Switch
         checked={selectionToolbar.enabled}

@@ -5,6 +5,7 @@ import { useCallback } from "react"
 import { buttonVariants } from "@/components/ui/base-ui/button"
 import { selectTTSVoice, useTextToSpeech } from "@/hooks/use-text-to-speech"
 import { ANALYTICS_SURFACE } from "@/types/analytics"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { i18n } from "@/utils/i18n"
 import { cn } from "@/utils/styles/utils"
@@ -13,7 +14,7 @@ import { SelectionPopoverTooltip, useSelectionTooltipState } from "./selection-t
 // Pass `language` when the text's language is known, as for a translation.
 // Without it the voice follows the language detected in the text, which can
 // mistake European for Brazilian Portuguese, and Cantonese for Mandarin.
-export function SpeakButton({
+function SelectionPopoverSpeakButton({
   text,
   language,
 }: {
@@ -74,3 +75,6 @@ export function SpeakButton({
     </SelectionPopoverTooltip>
   )
 }
+
+export const SpeakButton =
+  !import.meta.env.PROD && ACCOUNT_FEATURES_ENABLED ? SelectionPopoverSpeakButton : () => null

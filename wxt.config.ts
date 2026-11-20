@@ -109,6 +109,15 @@ export default defineConfig({
     excludeSources: ["docs/**/*", "assets/**/*", "repos/**/*", "readmes/**/*"],
   },
   hooks: {
+    "entrypoints:resolved": (wxt, entrypoints) => {
+      if (wxt.config.mode === "test") return
+
+      for (const entrypoint of entrypoints) {
+        if (entrypoint.name === "translation-hub" || entrypoint.name === "offscreen") {
+          entrypoint.skipped = true
+        }
+      }
+    },
     // With local packages the bundle holds @read-frog/layout-engine's readable
     // source, which must never leave this machine.
     "zip:start": () => {

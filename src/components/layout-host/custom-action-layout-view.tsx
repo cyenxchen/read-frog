@@ -5,7 +5,8 @@ import type { SurfaceByFeature } from "@/types/analytics"
 import type { SelectionToolbarCustomActionOutputField } from "@/types/config/selection-toolbar"
 import { DEFAULT_LAYOUT } from "@read-frog/layout-engine/presets"
 import { LayoutView } from "@read-frog/layout-engine/react"
-import { useMemo, useRef } from "react"
+import { useLayoutEffect, useMemo, useRef } from "react"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { buildCustomActionLayoutScope, CUSTOM_ACTION_LAYOUT_HOST } from "@/utils/layout-host/host"
 import { loadLayoutMath } from "@/utils/layout-host/math"
 import { createLogger } from "@/utils/logging/logger"
@@ -45,6 +46,8 @@ interface CustomActionLayoutViewProps {
 }
 
 const FALLBACK_SOURCES = [DEFAULT_LAYOUT]
+const useLayoutSpeech =
+  !import.meta.env.PROD && ACCOUNT_FEATURES_ENABLED ? useExtensionSpeakAdapter : () => undefined
 
 // What the layout wants known without changing what is shown (a failed
 // constructable stylesheet probe, an ignored host attribute).
@@ -77,12 +80,27 @@ export function CustomActionLayoutView({
     () => buildCustomActionLayoutScope({ outputSchema, value, selection, targetCode, status }),
     [outputSchema, value, selection, targetCode, status],
   )
-  const speak = useExtensionSpeakAdapter(speakSurface, autoplay)
+  const speak = useLayoutSpeech(speakSurface, autoplay)
 
   // The layout reports whenever anything about the render changes; callers
   // only hear about changes to what they are shown. LayoutView always calls
   // the latest callback, so this one may change on every render.
   const reportedRef = useRef<string | null>(null)
+  const layoutContainerRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const shadow = layoutContainerRef.current?.querySelector(
+      '[data-slot="layout-host"]',
+    )?.shadowRoot
+    if (!shadow) return undefined
+    const style = shadow.ownerDocument.createElement("style")
+    style.textContent = `
+      button[data-speak], [role="button"][data-speak] { display: none !important; }
+      [data-speak] { cursor: inherit; }
+    `
+    shadow.append(style)
+    return () => style.remove()
+  }, [])
+
   const handleReport = (report: LayoutRenderReport) => {
     const info = toRenderInfo(report)
     const serialized = JSON.stringify(info)
@@ -91,7 +109,7 @@ export function CustomActionLayoutView({
     onRenderInfo?.(info)
   }
 
-  return (
+  const layout = (
     <LayoutView
       host={CUSTOM_ACTION_LAYOUT_HOST}
       theme={theme}
@@ -106,5 +124,13 @@ export function CustomActionLayoutView({
       className={className}
       fallback={<FallbackFieldList outputSchema={outputSchema} value={value} status={status} />}
     />
+  )
+
+  return ACCOUNT_FEATURES_ENABLED ? (
+    layout
+  ) : (
+    <div ref={layoutContainerRef} className="contents">
+      {layout}
+    </div>
   )
 }

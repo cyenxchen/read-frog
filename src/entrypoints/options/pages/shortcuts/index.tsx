@@ -1,3 +1,4 @@
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { i18n } from "@/utils/i18n"
 import { PageLayout } from "../../components/page-layout"
 import { ActionShortcuts } from "./action-shortcuts"
@@ -22,18 +23,20 @@ export function ShortcutsPage() {
   return (
     <PageLayout
       title={i18n.t("options.shortcuts.title")}
-      description={i18n.t("options.shortcuts.pageDescription")}
+      description={
+        ACCOUNT_FEATURES_ENABLED ? i18n.t("options.shortcuts.pageDescription") : undefined
+      }
       innerClassName="flex flex-col gap-6"
     >
       <PageTranslationShortcut />
       <TranslationModeShortcut />
       <SelectionTranslationShortcut />
-      <SelectionSpeakShortcut />
+      {ACCOUNT_FEATURES_ENABLED && <SelectionSpeakShortcut />}
       <SelectionAnnotationShortcut />
       <SelectionAnnotationModeShortcut />
       <SubtitlesToggleShortcut />
       <NodeTranslationHotkey />
-      <TranslationHubShortcut />
+      {ACCOUNT_FEATURES_ENABLED && <TranslationHubShortcut />}
       <ActionShortcuts />
     </PageLayout>
   )

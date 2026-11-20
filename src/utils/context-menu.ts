@@ -1,4 +1,5 @@
 import type { Config } from "@/types/config/config"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { getSelectionToolbarActions } from "@/utils/custom-actions"
 import { i18n } from "@/utils/i18n"
 
@@ -24,7 +25,9 @@ export function getSelectionContextMenuItems(
 ): SelectionContextMenuItem[] {
   return [
     { id: MENU_ID_SELECTION_TRANSLATE, title: i18n.t("contextMenu.translateSelection") },
-    { id: MENU_ID_SELECTION_READ_ALOUD, title: i18n.t("contextMenu.readAloudSelection") },
+    ...(ACCOUNT_FEATURES_ENABLED
+      ? [{ id: MENU_ID_SELECTION_READ_ALOUD, title: i18n.t("contextMenu.readAloudSelection") }]
+      : []),
     ...getSelectionToolbarActions(selectionToolbar)
       .filter((action) => action.enabled !== false)
       .map((action) => ({

@@ -3,6 +3,7 @@ import type { ContentScriptContext } from "#imports"
 import type { Config } from "@/types/config/config"
 import { storage } from "#imports"
 import { configSchema } from "@/types/config/config"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { CONFIG_STORAGE_KEY, DEFAULT_CONFIG } from "@/utils/constants/config"
 import { detectPageLanguageLightweight } from "@/utils/content/page-language"
 import { ensurePresetStyles } from "@/utils/host/translate/ui/style-injector"
@@ -65,7 +66,9 @@ export async function bootstrapHostContent(
 
   const cleanupTranslationModeShortcut = await bindTranslationModeShortcutKey()
 
-  const cleanupTranslationHubShortcut = await bindTranslationHubShortcutKey()
+  const cleanupTranslationHubShortcut = ACCOUNT_FEATURES_ENABLED
+    ? await bindTranslationHubShortcutKey()
+    : undefined
 
   const detectAndReportPageLanguage = async (url: string) => {
     const generation = ++detectionGeneration
@@ -168,7 +171,7 @@ export async function bootstrapHostContent(
     cleanupTitleTranslationWatch()
     cleanupTranslationShortcut()
     cleanupTranslationModeShortcut()
-    cleanupTranslationHubShortcut()
+    cleanupTranslationHubShortcut?.()
     cleanupTranslationStateListener()
     cleanupFrameTranslationStateListener()
     cleanupDetectedLanguageRefreshListener()

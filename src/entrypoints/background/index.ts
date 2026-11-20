@@ -2,6 +2,7 @@ import "@/utils/zod-config"
 import type { Config, UiLanguage } from "@/types/config/config"
 import { browser, defineBackground } from "#imports"
 import { env } from "@/env"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { shouldOpenInstallGuide } from "@/utils/account-features/ui-policy" // fork:account-off
 import { storageAdapter } from "@/utils/atoms/storage-adapter"
 import { selectFreshTranslateProviders } from "@/utils/config/default-translate-provider"
@@ -166,9 +167,11 @@ export default defineBackground({
     setupHostedAiStatusHandler()
     setupGlossaryMessageHandlers()
     setupNotebasePendingSaveProcessor(() => backgroundReady)
-    setupEdgeTTSMessageHandlers()
     setupLLMGenerateTextMessageHandlers()
-    setupTTSPlaybackMessageHandlers()
+    if (!import.meta.env.PROD && ACCOUNT_FEATURES_ENABLED) {
+      setupEdgeTTSMessageHandlers()
+      setupTTSPlaybackMessageHandlers()
+    }
     void initMockData()
 
     // Setup on-demand iframe injection after page translation is enabled.

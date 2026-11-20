@@ -1,6 +1,7 @@
 import type { Config } from "@/types/config/config"
 import type { SelectionToolbarCustomAction } from "@/types/config/selection-toolbar"
 import type { SelectionToolbarFeatureId } from "@/utils/constants/selection"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { SELECTION_TOOLBAR_FEATURE_IDS } from "@/utils/constants/selection"
 import { getSelectionToolbarActions } from "@/utils/custom-actions"
 import { normalizeSelectionToolbarLists } from "@/utils/selection-toolbar-order"
@@ -41,7 +42,15 @@ export function getSelectionToolbarItems(
   return order.flatMap((id): SelectionToolbarItem[] => {
     const pinned = !unpinnedIds.has(id)
     if (isFeatureId(id)) {
-      return [{ kind: "feature", id, enabled: selectionToolbar.features[id].enabled, pinned }]
+      const available = ACCOUNT_FEATURES_ENABLED || id !== "speak"
+      return [
+        {
+          kind: "feature",
+          id,
+          enabled: available && selectionToolbar.features[id].enabled,
+          pinned,
+        },
+      ]
     }
     const action = actions.get(id)
     return action ? [{ kind: "action", id, enabled: action.enabled !== false, pinned, action }] : []

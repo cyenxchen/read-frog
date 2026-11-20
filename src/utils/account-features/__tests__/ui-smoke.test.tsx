@@ -15,6 +15,7 @@ import { SettingsSearch } from "@/entrypoints/options/command-palette/settings-s
 import { ApiProvidersPage } from "@/entrypoints/options/pages/api-providers"
 import { ActionEditorTabs } from "@/entrypoints/options/pages/custom-actions/action-config-form/editor-tabs"
 import { ConfigManagementSection } from "@/entrypoints/options/pages/preference/config"
+import { UserExperienceSection } from "@/entrypoints/options/pages/preference/user-experience"
 import { ActionsSection } from "@/entrypoints/options/pages/selection-toolbar/actions"
 import { VideoSubtitlesPage } from "@/entrypoints/options/pages/video-subtitles"
 import Popup from "@/entrypoints/popup/app"
@@ -141,7 +142,7 @@ vi.mock("@/entrypoints/popup/components/store-review-prompt", () => ({
 vi.mock("@/entrypoints/popup/components/translate-button", () => ({ default: () => null }))
 vi.mock("@/entrypoints/popup/components/translate-prompt-selector", () => ({ default: () => null }))
 vi.mock("@/entrypoints/popup/components/translation-hub-button", () => ({
-  TranslationHubButton: () => null,
+  TranslationHubButton: () => <button type="button">Translation Hub button</button>,
 }))
 vi.mock("@/entrypoints/popup/components/translation-mode-selector", () => ({ default: () => null }))
 
@@ -230,6 +231,41 @@ it("command palette hides Google Drive sync and offers manual config sync", () =
 
   expect(screen.queryByText("options.preference.config.googleDrive.title")).not.toBeInTheDocument()
   expect(screen.getByText("options.preference.config.manualSync.title")).toBeInTheDocument()
+})
+it("hides retired fork features from settings, sidebar and popup", () => {
+  mount(
+    <>
+      <UserExperienceSection />
+      <FeaturesNav />
+      <Popup />
+      <ActionsSection />
+    </>,
+  )
+
+  for (const title of [
+    "options.preference.userExperience.title",
+    "options.tools.translationHub",
+    "Translation Hub button",
+    "options.tts.title",
+    "options.selectionToolbar.actions.speak.title",
+  ]) {
+    expect.soft(screen.queryByText(title)).not.toBeInTheDocument()
+  }
+  expect(screen.getByText("options.selectionToolbar.actions.translate.title")).toBeVisible()
+})
+it("hides retired fork features from settings search", () => {
+  mount(<SettingsSearch />)
+
+  for (const title of [
+    "options.preference.userExperience.beta.title",
+    "options.preference.userExperience.analytics.title",
+    "options.shortcuts.translationHub.title",
+    "options.shortcuts.selectionSpeak.title",
+    "options.tts.speech.rate.title",
+  ]) {
+    expect.soft(screen.queryByText(title)).not.toBeInTheDocument()
+  }
+  expect(screen.getByText("options.preference.config.manualSync.title")).toBeVisible()
 })
 it("API Providers hides hosted cards, editor and usage, keeping own-provider editing", () => {
   mount(<ApiProvidersPage />)

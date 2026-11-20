@@ -5,6 +5,7 @@ import { useHostedAiProviderOptions } from "@/components/llm-providers/use-hoste
 import { useHostedAiStatus } from "@/components/llm-providers/use-hosted-ai-status"
 import { Label } from "@/components/ui/base-ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/base-ui/radio-group"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { resolveLanguageDetectionConfigForModeChange } from "@/utils/config/helpers"
 import { i18n } from "@/utils/i18n"
@@ -64,8 +65,15 @@ export function LanguageDetectionConfig() {
         title={i18n.t("options.apiProviders.languageDetection.provider.label")}
         description={
           <>
-            {i18n.t("options.apiProviders.languageDetection.description")}
-            <span className="mt-2 flex items-center gap-1.5">
+            {ACCOUNT_FEATURES_ENABLED &&
+              i18n.t("options.apiProviders.languageDetection.description")}
+            <span
+              className={
+                ACCOUNT_FEATURES_ENABLED
+                  ? "mt-2 flex items-center gap-1.5"
+                  : "flex items-center gap-1.5"
+              }
+            >
               <span className={`size-2 rounded-full ${statusIndicator.color}`} />
               <span className="text-xs">{statusIndicator.text}</span>
             </span>

@@ -67,6 +67,7 @@ import {
 } from "@/components/ui/base-ui/popover"
 import { Skeleton } from "@/components/ui/base-ui/skeleton"
 import { MAX_CUSTOM_ACTION_LAYOUT_LENGTH } from "@/types/config/selection-toolbar"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { i18n } from "@/utils/i18n"
 import { resolveActionLayout } from "@/utils/layout-host/resolve"
 import {
@@ -161,13 +162,18 @@ const CTX_SNIPPETS = [
 
 function getHelpItems(example: string): Array<{ code: string; key: LayoutKey }> {
   const ref = formatFieldRef(example)
+  const speechHelp: Array<{ code: string; key: LayoutKey }> = ACCOUNT_FEATURES_ENABLED
+    ? [
+        { code: `<span data-speak="{{ ${ref} }}">…</span>`, key: "help.speak" },
+        { code: `data-speak-lang="es"`, key: "help.speakLang" },
+        { code: "data-speak-autoplay", key: "help.speakAutoplay" },
+      ]
+    : []
   return [
     { code: `{{ ${ref} }}`, key: "help.output" },
     { code: `{% if ${ref} != blank %}…{% endif %}`, key: "help.condition" },
     { code: `{% for f in ${LAYOUT_CTX_ROOT}.fields %}{{ f.name }}{% endfor %}`, key: "help.loop" },
-    { code: `<span data-speak="{{ ${ref} }}">…</span>`, key: "help.speak" },
-    { code: `data-speak-lang="es"`, key: "help.speakLang" },
-    { code: "data-speak-autoplay", key: "help.speakAutoplay" },
+    ...speechHelp,
     { code: ":host([data-status=streaming]) .x { … }", key: "help.status" },
     { code: `{{ ${ref} | newline_to_br }}`, key: "help.filters" },
     { code: "<style>.x { color: var(--rf-muted-foreground) }</style>", key: "help.styles" },
@@ -266,16 +272,18 @@ function LayoutToolbar({
         outputSchema={outputSchema}
         onPick={(field) => editor.current?.insert(outputSnippet(field.name))}
       />
-      <FieldMenu
-        label={t("insertSpeak")}
-        icon={<IconVolume />}
-        outputSchema={outputSchema}
-        onPick={(field) =>
-          editor.current?.insert(speakSnippet(field.name), {
-            prepend: speakStylesToPrepend(source),
-          })
-        }
-      />
+      {ACCOUNT_FEATURES_ENABLED && (
+        <FieldMenu
+          label={t("insertSpeak")}
+          icon={<IconVolume />}
+          outputSchema={outputSchema}
+          onPick={(field) =>
+            editor.current?.insert(speakSnippet(field.name), {
+              prepend: speakStylesToPrepend(source),
+            })
+          }
+        />
+      )}
       <FieldMenu
         label={t("insertCondition")}
         icon={<IconCode />}

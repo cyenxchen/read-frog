@@ -174,32 +174,36 @@ export function FeaturesNav() {
             </SidebarMenuItem>
           </CollapsibleNavGroup>
 
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={<Link to="/tts" />}
-              isActive={pathname === "/tts"}
-              tooltip={i18n.t("options.tts.title")}
-            >
-              <Icon icon="tabler:speakerphone" />
-              <span>{i18n.t("options.tts.title")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {ACCOUNT_FEATURES_ENABLED && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link to="/tts" />}
+                isActive={pathname === "/tts"}
+                tooltip={i18n.t("options.tts.title")}
+              >
+                <Icon icon="tabler:speakerphone" />
+                <span>{i18n.t("options.tts.title")}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
 
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={
-                <a
-                  href={browser.runtime.getURL(TRANSLATION_HUB_PAGE_PATH)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              }
-              tooltip={i18n.t("options.tools.translationHub")}
-            >
-              <Icon icon="tabler:language-hiragana" />
-              <span>{i18n.t("options.tools.translationHub")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {ACCOUNT_FEATURES_ENABLED && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={
+                  <a
+                    href={browser.runtime.getURL(TRANSLATION_HUB_PAGE_PATH)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                }
+                tooltip={i18n.t("options.tools.translationHub")}
+              >
+                <Icon icon="tabler:language-hiragana" />
+                <span>{i18n.t("options.tools.translationHub")}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <CollapsibleNavGroup active={isAdvancedActive}>
             <SidebarMenuItem>
               <CollapsibleTrigger

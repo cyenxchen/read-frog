@@ -11,7 +11,6 @@ import { DOMAudioPlaybackController } from "@/utils/tts-playback/dom-audio-contr
 const log = createLogger("background/tts-playback")
 
 const OFFSCREEN_DOCUMENT_PATH = "/offscreen.html" as const
-const OFFSCREEN_DOCUMENT_URL = browser.runtime.getURL(OFFSCREEN_DOCUMENT_PATH)
 const OFFSCREEN_REASON = "AUDIO_PLAYBACK"
 const OFFSCREEN_JUSTIFICATION =
   "Play synthesized speech from extension context to avoid webpage CSP media restrictions."
@@ -154,7 +153,7 @@ class ChromeOffscreenPlaybackAdapter implements TTSPlaybackAdapter {
 
     const contexts = await chromeApi.runtime.getContexts({
       contextTypes: ["OFFSCREEN_DOCUMENT"],
-      documentUrls: [OFFSCREEN_DOCUMENT_URL],
+      documentUrls: [browser.runtime.getURL(OFFSCREEN_DOCUMENT_PATH)],
     })
 
     return contexts.some((context) => context.contextType === "OFFSCREEN_DOCUMENT")

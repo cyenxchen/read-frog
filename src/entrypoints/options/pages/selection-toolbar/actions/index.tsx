@@ -43,21 +43,23 @@ export function ActionsSection() {
           onCheckedChange={(checked) => setFeatureEnabled("translate", checked)}
         />
       </ConfigItem>
-      <ConfigItem
-        id="selection-toolbar-speak"
-        title={i18n.t("options.selectionToolbar.actions.speak.title")}
-        description={
-          <>
-            {i18n.t("options.selectionToolbar.actions.speak.description")}
-            <ShortcutLink sectionId="selection-speak-shortcut" />
-          </>
-        }
-      >
-        <Switch
-          checked={features.speak.enabled}
-          onCheckedChange={(checked) => setFeatureEnabled("speak", checked)}
-        />
-      </ConfigItem>
+      {ACCOUNT_FEATURES_ENABLED && (
+        <ConfigItem
+          id="selection-toolbar-speak"
+          title={i18n.t("options.selectionToolbar.actions.speak.title")}
+          description={
+            <>
+              {i18n.t("options.selectionToolbar.actions.speak.description")}
+              <ShortcutLink sectionId="selection-speak-shortcut" />
+            </>
+          }
+        >
+          <Switch
+            checked={features.speak.enabled}
+            onCheckedChange={(checked) => setFeatureEnabled("speak", checked)}
+          />
+        </ConfigItem>
+      )}
       {/* // fork:account-off */}
       {ACCOUNT_FEATURES_ENABLED && <NoteSuggestionItems />}
     </ConfigSection>

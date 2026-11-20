@@ -1,6 +1,7 @@
 import type { ComponentType } from "react"
 import { lazy, Suspense } from "react"
 import { Navigate, Route, Routes } from "react-router"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { ROUTE_DEFS } from "./app-sidebar/nav-items"
 
 type RoutePath = (typeof ROUTE_DEFS)[number]["path"]
@@ -35,9 +36,12 @@ const ContextMenuPage = lazy(() =>
 const InputTranslationPage = lazy(() =>
   import("./pages/input-translation").then((module) => ({ default: module.InputTranslationPage })),
 )
-const TextToSpeechPage = lazy(() =>
-  import("./pages/text-to-speech").then((module) => ({ default: module.TextToSpeechPage })),
-)
+const TextToSpeechPage =
+  !import.meta.env.PROD && ACCOUNT_FEATURES_ENABLED
+    ? lazy(() =>
+        import("./pages/text-to-speech").then((module) => ({ default: module.TextToSpeechPage })),
+      )
+    : () => <Navigate to="/" replace />
 const GlossaryPage = lazy(() =>
   import("./pages/advanced/glossary").then((module) => ({ default: module.GlossaryPage })),
 )

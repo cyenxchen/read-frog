@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { IconLoader2, IconPlayerStopFilled, IconVolume } from "@tabler/icons-react"
 import { useAtomValue } from "jotai"
-import { createContext, use, useCallback } from "react"
+import { createContext, Fragment, use, useCallback } from "react"
 import { toastManager } from "@/components/ui/base-ui/toast"
 import {
   SelectionToolbarTooltip,
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/selection-popover/selection-tooltip"
 import { useTextToSpeech } from "@/hooks/use-text-to-speech"
 import { ANALYTICS_SURFACE } from "@/types/analytics"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { getSpeakShortcut } from "@/utils/constants/selection"
 import { i18n } from "@/utils/i18n"
@@ -75,18 +76,31 @@ const SelectionSpeechContext = createContext<SelectionSpeech | null>(null)
 // One reader for the whole toolbar: its speak button, the speak row of its
 // "more" menu and the speak key show, and stop, the same playback, which
 // outlives the button being unpinned and the toolbar being hidden.
-export function SelectionSpeechProvider({ children }: { children: ReactNode }) {
+function SpeechProvider({ children }: { children: ReactNode }) {
   const speech = useSelectionSpeechController()
   return <SelectionSpeechContext value={speech}>{children}</SelectionSpeechContext>
 }
 
-export function useSelectionSpeech(): SelectionSpeech {
+function useSpeech(): SelectionSpeech {
   const speech = use(SelectionSpeechContext)
   if (!speech) {
     throw new Error("Selection speech must be used within SelectionSpeechProvider.")
   }
   return speech
 }
+
+const disabledSpeech: SelectionSpeech = {
+  isFetching: false,
+  isPlaying: false,
+  label: "",
+  toggle: () => false,
+}
+
+export const SelectionSpeechProvider =
+  !import.meta.env.PROD && ACCOUNT_FEATURES_ENABLED ? SpeechProvider : Fragment
+
+export const useSelectionSpeech =
+  !import.meta.env.PROD && ACCOUNT_FEATURES_ENABLED ? useSpeech : () => disabledSpeech
 
 export function SpeakButton() {
   const { isFetching, isPlaying, label: tooltipText, toggle } = useSelectionSpeech()
