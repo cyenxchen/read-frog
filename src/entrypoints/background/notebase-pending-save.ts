@@ -55,7 +55,7 @@ import {
   validateStillCanSavePendingCreateNotebaseSave,
 } from "@/utils/notebase/pending-save"
 import { backgroundOrpcClient } from "@/utils/orpc/background-client"
-import { captureFeatureUsedEventInBackground } from "./analytics"
+import { captureFeatureUsedEventInBackground } from "./feature-used-event"
 import { completeGuideDictionaryNotebaseAndNotify } from "./new-user-guide"
 
 const log = createLogger("background/notebase-pending-save")

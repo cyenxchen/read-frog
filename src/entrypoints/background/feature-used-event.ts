@@ -1,6 +1,16 @@
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { recordFeatureActiveDay } from "@/utils/feature-active-days"
 import { onMessage } from "@/utils/message"
-import { captureFeatureUsedEventInBackground } from "./analytics"
+
+type CaptureFeatureUsedEvent = typeof import("./analytics").captureFeatureUsedEventInBackground
+
+export const captureFeatureUsedEventInBackground: CaptureFeatureUsedEvent =
+  !import.meta.env.PROD && ACCOUNT_FEATURES_ENABLED
+    ? async (...args) => {
+        const analytics = await import("./analytics")
+        await analytics.captureFeatureUsedEventInBackground(...args)
+      }
+    : async () => {}
 
 /**
  * Sole subscriber to the feature-used event, fanning it out to the two consumers that

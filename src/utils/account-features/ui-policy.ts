@@ -1,4 +1,3 @@
-import { env } from "@/env"
 import { CUSTOM_ACTION_NOTEBASE_SECTION_ID } from "@/utils/navigation"
 import { ACCOUNT_FEATURES_ENABLED } from "./flag"
 
@@ -6,8 +5,7 @@ export function shouldOpenInstallGuide(): boolean {
   return ACCOUNT_FEATURES_ENABLED
 }
 
-export const SHOW_ANALYTICS_PREFERENCE =
-  ACCOUNT_FEATURES_ENABLED || Boolean(env.WXT_POSTHOG_HOST && env.WXT_POSTHOG_API_KEY)
+export const SHOW_ANALYTICS_PREFERENCE = ACCOUNT_FEATURES_ENABLED
 
 export const HIDDEN_ACCOUNT_SECTION_IDS: ReadonlySet<string> = new Set(
   ACCOUNT_FEATURES_ENABLED
