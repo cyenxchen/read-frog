@@ -31,10 +31,11 @@ import {
   AnnotateReveal,
   useAnnotateReveal,
 } from "../annotation/toolbar-slot"
-import { buildContextSnapshot, readSelectionSnapshot } from "../utils"
+import { buildContextSnapshot, normalizeSelectedText, readSelectionSnapshot } from "../utils"
 import {
   clearSelectionStateAtom,
   createSelectionSession,
+  isSelectionToolbarHiddenUntilReloadAtom,
   isSelectionToolbarOpenAtom,
   setSelectionStateAtom,
 } from "./atoms"
@@ -241,9 +242,12 @@ export function SelectionToolbar() {
   const setSelectionState = useSetAtom(setSelectionStateAtom)
   const clearSelectionState = useSetAtom(clearSelectionStateAtom)
   const selectionToolbar = useAtomValue(configFieldsAtomMap.selectionToolbar)
-  const isSiteDisabled = selectionToolbar.disabledSelectionToolbarPatterns?.some((pattern) =>
-    urlMatchesPattern(window.location.href, pattern),
-  )
+  const isHiddenUntilReload = useAtomValue(isSelectionToolbarHiddenUntilReloadAtom)
+  const isHiddenOnPage =
+    isHiddenUntilReload ||
+    selectionToolbar.disabledSelectionToolbarPatterns?.some((pattern) =>
+      urlMatchesPattern(window.location.href, pattern),
+    )
   const annotation = useAnnotation()
   // With nothing pinned the toolbar still shows its "more" menu; with nothing
   // enabled — and the annotation slot off — there is nothing to show.
@@ -251,7 +255,7 @@ export function SelectionToolbar() {
   const hasAnyEnabledItem = enabledItems.length > 0 || annotation.enabled
   const hasAnyPinnedItem = enabledItems.some((item) => item.pinned)
   const isSelectionToolbarVisible =
-    isSelectionToolbarOpen && selectionToolbar.enabled && !isSiteDisabled && hasAnyEnabledItem
+    isSelectionToolbarOpen && selectionToolbar.enabled && !isHiddenOnPage && hasAnyEnabledItem
   const reveal = useAnnotateReveal(tooltipRef, isSelectionToolbarVisible)
   // In annotation mode a selection is annotated where it is made; the toolbar
   // never opens for it. Selections in text controls have nothing to annotate.
@@ -527,8 +531,17 @@ export function SelectionToolbar() {
         return
       }
 
-      // if the selected content is cleared, hide the tooltip
-      if (!selection || selection.toString().trim().length === 0) {
+      // Once no text is selected, hide the toolbar. A selection across shadow
+      // roots can stringify blank (and report isCollapsed) while text is
+      // selected, so a blank string is checked by reading the selection. Only
+      // then: reading each one would walk a long selection on every change.
+      // `type` can't decide it either: Firefox reports "Caret" for text
+      // selected in a text control or a shadow root.
+      // https://github.com/mengxi-ream/read-frog/issues/2385
+      if (
+        !selection ||
+        (normalizeSelectedText(selection.toString()) === "" && !readSelectionSnapshot(selection))
+      ) {
         if (preserveSelectionStateRef.current) {
           return
         }
@@ -652,7 +665,7 @@ export function SelectionToolbar() {
       )}
       {...{ [SELECTION_CONTENT_OVERLAY_ROOT_ATTRIBUTE]: "" }}
     >
-      {selectionToolbar.enabled && !isSiteDisabled && hasAnyEnabledItem && (
+      {selectionToolbar.enabled && !isHiddenOnPage && hasAnyEnabledItem && (
         <div
           ref={tooltipRef}
           inert={!isSelectionToolbarVisible}

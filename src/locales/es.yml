@@ -160,6 +160,7 @@ options:
     configTitle: Configuración de proveedores
     addProvider: Añadir proveedor
     builtInProvider: Proveedor integrado
+    yourProviders: Tus proveedores
     builtInAiUsage:
       title: Cuota de IA integrada
       remaining: "$1% restante"
@@ -624,8 +625,7 @@ options:
       panel: Abrir panel lateral
       translate: Alternar traducción de página
     closeMenu:
-      disableForSite: Desactivar para este sitio
-      disableGlobally: Desactivar globalmente
+      title: Ocultar botón flotante
     tooltips:
       togglePageTranslation: Alternar traducción de página
       floatingButtonOptions: Opciones del botón flotante
@@ -674,8 +674,7 @@ options:
         enterUrlPattern: Introduce patrón de URL
         urlPattern: Patrón de URL
     closeMenu:
-      disableForSite: Desactivar para este sitio
-      disableGlobally: Desactivar globalmente
+      title: Ocultar barra de selección
     errors:
       customActionFailed: Falló la acción personalizada
       customActionFailedFallback: Falló la solicitud de acción personalizada
@@ -1434,10 +1433,11 @@ options:
       title: Aspectos básicos
       enable:
         title: Activar subtítulos de video
-        description: Añade un botón de traducción a los controles del reproductor en YouTube, X, Netflix, Bilibili, Udemy y edX.
-      autoStart:
-        title: Traducir al abrir el video
-        description: Empieza a traducir en cuanto se carga el video, sin pulsar el botón.
+        description: "Elige para cada sitio: desactivado, manual (se inicia con el botón de traducción del reproductor) o automático (se inicia al abrir el video)."
+        mode:
+          off: "Desactivado"
+          manual: "Manual"
+          auto: "Automático"
       aiSegmentation:
         title: Segmentación inteligente de IA
         description: La IA vuelve a cortar los subtítulos en frases. Las traducciones tardan más. Requiere un LLM potente; los modelos más débiles pueden omitir o desalinear líneas.
@@ -1645,6 +1645,11 @@ speak:
   noTextSelected: No hay texto seleccionado
   openaiNotConfigured: El proveedor OpenAI no está configurado o activado
   openaiApiKeyNotConfigured: La clave API de OpenAI no está configurada
+hideMenu:
+  untilReload: Hasta que recargue la página
+  onSite: En $1
+  onAllSites: En todos los sitios
+  restoreHint: Se puede volver a activar en $1.
 action:
   copy: Copiar
   copied: Copiado
@@ -1736,6 +1741,7 @@ subtitles:
   requestAiSubtitles: Solicitar subtítulos con IA
   usingAiSubtitles: Usando subtítulos con IA
   settings: Ajustes de subtítulos
+  autoStartOnPlatform: "Iniciar automáticamente en los videos de $1"
   toggle:
     enabled: Traducción de subtítulos activada
     disabled: Traducción de subtítulos desactivada

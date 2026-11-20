@@ -1,5 +1,6 @@
 import { atom } from "jotai"
 import { requestEditorNavigationAtom } from "@/components/form/autosave-navigation"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { getAPIProvidersConfig } from "@/utils/config/helpers"
 import { BUILT_IN_AI_PROVIDER_ID } from "@/utils/providers/provider-registry"
@@ -23,15 +24,11 @@ const internalSelectedProviderIdAtom = atom<string | undefined>(undefined)
 export const selectedProviderIdAtom = atom(
   (get) => {
     const selected = get(internalSelectedProviderIdAtom)
-    if (selected !== undefined) {
-      return selected
-    }
+    if (selected !== undefined) return selected
+    if (ACCOUNT_FEATURES_ENABLED) return BUILT_IN_AI_PROVIDER_ID
 
     const providersConfig = get(configFieldsAtomMap.providersConfig)
-    const apiProvidersConfig = getAPIProvidersConfig(providersConfig)
-    const firstProviderId =
-      apiProvidersConfig.length > 0 ? apiProvidersConfig[0]!.id : BUILT_IN_AI_PROVIDER_ID
-    return firstProviderId
+    return getAPIProvidersConfig(providersConfig)[0]?.id ?? BUILT_IN_AI_PROVIDER_ID
   },
   (get, set, newValue: string | undefined) => {
     if (get(internalSelectedProviderIdAtom) === newValue) return Promise.resolve(true)

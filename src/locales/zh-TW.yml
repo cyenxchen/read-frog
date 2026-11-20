@@ -160,6 +160,7 @@ options:
     configTitle: 提供者設定
     addProvider: 新增提供者
     builtInProvider: 內建提供者
+    yourProviders: 我的提供者
     builtInAiUsage:
       title: 內建 AI 額度
       remaining: "剩餘 $1%"
@@ -624,8 +625,7 @@ options:
       panel: 開啟側邊欄
       translate: 切換頁面翻譯
     closeMenu:
-      disableForSite: 停用此網站
-      disableGlobally: 全域停用
+      title: 隱藏懸浮按鈕
     tooltips:
       togglePageTranslation: 切換頁面翻譯
       floatingButtonOptions: 懸浮按鈕選項
@@ -674,8 +674,7 @@ options:
         enterUrlPattern: 輸入網址模式
         urlPattern: URL 模式
     closeMenu:
-      disableForSite: 停用此網站
-      disableGlobally: 全域停用
+      title: 隱藏選取工具列
     errors:
       customActionFailed: 自訂操作失敗
       customActionFailedFallback: 自訂操作請求失敗
@@ -1439,10 +1438,11 @@ options:
       title: 基礎設定
       enable:
         title: 開啟影片字幕
-        description: 在 YouTube、X、Netflix、嗶哩嗶哩、Udemy 和 edX 的影片播放器控制列加上翻譯按鈕。
-      autoStart:
-        title: 打開影片就翻譯
-        description: 影片載入完成後自動開始翻譯字幕，不用再點按鈕。
+        description: "依網站選擇：關閉、手動開啟（點播放器裡的翻譯按鈕），或打開影片時自動開啟。"
+        mode:
+          off: "關閉"
+          manual: "手動開啟"
+          auto: "自動開啟"
       aiSegmentation:
         title: AI 智慧斷句
         description: 讓 AI 把字幕重新切成完整句子，會增加翻譯回應時間。需要較強的 LLM，弱模型可能漏句或錯位。
@@ -1650,6 +1650,11 @@ speak:
   noTextSelected: 未選取文字
   openaiNotConfigured: 尚未設定或啟用 OpenAI 提供者
   openaiApiKeyNotConfigured: 尚未設定 OpenAI API 金鑰
+hideMenu:
+  untilReload: 直到重新整理頁面
+  onSite: 在 $1 上
+  onAllSites: 在所有網站上
+  restoreHint: 可在「$1」中重新開啟。
 action:
   copy: 複製
   copied: 已複製
@@ -1741,6 +1746,7 @@ subtitles:
   requestAiSubtitles: 請求 AI 字幕
   usingAiSubtitles: 正在使用 AI 字幕
   settings: 字幕設定
+  autoStartOnPlatform: "打開 $1 影片時自動開啟"
   toggle:
     enabled: 字幕翻譯已開啟
     disabled: 字幕翻譯已關閉
