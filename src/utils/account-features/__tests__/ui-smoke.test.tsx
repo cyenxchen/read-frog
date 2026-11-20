@@ -14,6 +14,7 @@ import { SEARCH_ITEMS } from "@/entrypoints/options/command-palette/search-items
 import { SettingsSearch } from "@/entrypoints/options/command-palette/settings-search"
 import { ApiProvidersPage } from "@/entrypoints/options/pages/api-providers"
 import { ActionEditorTabs } from "@/entrypoints/options/pages/custom-actions/action-config-form/editor-tabs"
+import { ConfigManagementSection } from "@/entrypoints/options/pages/preference/config"
 import { ActionsSection } from "@/entrypoints/options/pages/selection-toolbar/actions"
 import { VideoSubtitlesPage } from "@/entrypoints/options/pages/video-subtitles"
 import Popup from "@/entrypoints/popup/app"
@@ -209,6 +210,26 @@ it("command palette offers no Product, Roadmap or Help & Community destinations"
   expect(
     screen.getByText("options.translation.preference.translationMode.title"),
   ).toBeInTheDocument()
+})
+it("config management hides Google Drive sync and offers local config tools", () => {
+  mount(<ConfigManagementSection />)
+
+  expect(screen.queryByText("options.preference.config.googleDrive.title")).not.toBeInTheDocument()
+  expect(
+    screen.getByRole("button", { name: "options.preference.config.manualSync.import" }),
+  ).toBeVisible()
+  expect(
+    screen.getByRole("button", { name: "options.preference.config.manualSync.export" }),
+  ).toBeVisible()
+  expect(
+    screen.getByRole("link", { name: /options\.preference\.config\.backup\.title/ }),
+  ).toBeVisible()
+})
+it("command palette hides Google Drive sync and offers manual config sync", () => {
+  mount(<SettingsSearch />)
+
+  expect(screen.queryByText("options.preference.config.googleDrive.title")).not.toBeInTheDocument()
+  expect(screen.getByText("options.preference.config.manualSync.title")).toBeInTheDocument()
 })
 it("API Providers hides hosted cards, editor and usage, keeping own-provider editing", () => {
   mount(<ApiProvidersPage />)

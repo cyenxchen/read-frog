@@ -10,6 +10,7 @@ export const HIDDEN_ACCOUNT_SECTION_IDS: ReadonlySet<string> = new Set(
     ? []
     : [
         CUSTOM_ACTION_NOTEBASE_SECTION_ID,
+        "google-drive-sync",
         "selection-toolbar-note-suggestion",
         "subtitles-ai-quota",
       ],
