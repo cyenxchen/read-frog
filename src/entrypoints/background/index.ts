@@ -5,7 +5,7 @@ import { env } from "@/env"
 import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { shouldOpenInstallGuide } from "@/utils/account-features/ui-policy" // fork:account-off
 import { storageAdapter } from "@/utils/atoms/storage-adapter"
-import { selectFreshTranslateProviders } from "@/utils/config/default-translate-provider"
+import { getFreeTranslateProviderId } from "@/utils/config/free-translate-provider"
 import { CONFIG_STORAGE_KEY } from "@/utils/constants/config"
 import { initI18n, setUiLanguage } from "@/utils/i18n"
 import { ensureInstalledAtRecorded } from "@/utils/install-time"
@@ -18,6 +18,7 @@ import { ensureRemoteSiteRulesLoaded } from "@/utils/site-rules/active"
 import { runAiSegmentSubtitles } from "./ai-segmentation"
 import { dispatchBackgroundStreamPort } from "./background-stream"
 import { initializeActionIcons, registerActionIconListeners } from "./browser-action-icon"
+import { claimBuiltInAiAutoPrompt } from "./built-in-ai-auto-prompt"
 import { ensureInitializedConfig, isFreshInstalledConfig } from "./config"
 import { setUpConfigBackup } from "./config-backup"
 import { initializeContextMenu, registerContextMenuListeners } from "./context-menu"
@@ -77,13 +78,12 @@ export default defineBackground({
 
       // Deliberately last: probing Google Translate can hang for seconds on networks that
       // block it, and nothing above should wait for that. Awaiting inside the listener
-      // keeps the service worker alive until the probe settles. Guarded by the config
-      // actually being new rather than by the install reason: reloading an unpacked
-      // extension reports "install" while the developer's provider choice is still in
-      // storage, and a config rebuilt from defaults after failing validation during an
-      // update deserves the same provider selection a fresh install gets.
+      // keeps the service worker alive until the probe settles. A fresh config translates
+      // with Built-in AI, which a guest cannot run, so the guide tab opened above and the
+      // guest's sign-in prompt both need the free provider soon: probe now, while the user
+      // reads the guide, rather than when they first click translate.
       if (await isFreshInstalledConfig()) {
-        await selectFreshTranslateProviders()
+        await getFreeTranslateProviderId()
       }
 
       // Clear blog cache on extension update to fetch latest blog posts
@@ -92,6 +92,9 @@ export default defineBackground({
         await SessionCacheGroupRegistry.removeCacheGroup("blog-fetch")
       }
     })
+
+    onMessage("getFreeTranslateProviderId", () => getFreeTranslateProviderId())
+    onMessage("claimBuiltInAiAutoPrompt", () => claimBuiltInAiAutoPrompt())
 
     onMessage("openPage", async (message) => {
       const { url, active } = message.data

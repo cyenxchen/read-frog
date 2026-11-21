@@ -3,7 +3,7 @@ import { requestEditorNavigationAtom } from "@/components/form/autosave-navigati
 import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { getAPIProvidersConfig } from "@/utils/config/helpers"
-import { BUILT_IN_AI_PROVIDER_ID } from "@/utils/providers/provider-registry"
+import { DEFAULT_BUILT_IN_AI_PROVIDER_ID } from "@/utils/providers/provider-registry"
 
 /**
  * The field a deep link asked Provider Config to draw attention to. Held as state rather than
@@ -25,10 +25,10 @@ export const selectedProviderIdAtom = atom(
   (get) => {
     const selected = get(internalSelectedProviderIdAtom)
     if (selected !== undefined) return selected
-    if (ACCOUNT_FEATURES_ENABLED) return BUILT_IN_AI_PROVIDER_ID
+    if (ACCOUNT_FEATURES_ENABLED) return DEFAULT_BUILT_IN_AI_PROVIDER_ID
 
     const providersConfig = get(configFieldsAtomMap.providersConfig)
-    return getAPIProvidersConfig(providersConfig)[0]?.id ?? BUILT_IN_AI_PROVIDER_ID
+    return getAPIProvidersConfig(providersConfig)[0]?.id ?? DEFAULT_BUILT_IN_AI_PROVIDER_ID
   },
   (get, set, newValue: string | undefined) => {
     if (get(internalSelectedProviderIdAtom) === newValue) return Promise.resolve(true)

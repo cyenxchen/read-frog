@@ -160,7 +160,22 @@ options:
     configTitle: Configuración de proveedores
     addProvider: Añadir proveedor
     builtInProvider: Proveedor integrado
-    yourProviders: Tus proveedores
+    thirdPartyProviders: Proveedores de terceros
+    builtInModel:
+      reasoningDescription: "Cuánto piensa $1 antes de responder. Los niveles más altos manejan mejor los textos difíciles, pero responden más despacio y consumen más de tu cuota."
+      reasoningDefault: "Predeterminado"
+      reasoningLevels:
+        none: "Desactivado"
+        minimal: "Mínimo"
+        low: "Bajo"
+        medium: "Medio"
+        high: "Alto"
+        xhigh: "Muy alto"
+      unavailableTitle:
+        temporary: "$1 no está disponible temporalmente"
+        removed: "$1 ya no se ofrece"
+      unavailableDescription: "Las funciones que lo usan muestran un error mientras no pueda ejecutarse. Para continuar, cámbialas a $1."
+      unavailableDescriptionNoAlternatives: "Las funciones que lo usan muestran un error mientras no pueda ejecutarse. Para continuar, cámbialas a otro proveedor."
     builtInAiUsage:
       title: Cuota de IA integrada
       remaining: "$1% restante"
@@ -632,7 +647,6 @@ options:
       lockPosition: Bloquear posición
       unlockPosition: Desbloquear posición
       settings: Ajustes
-      feedback: Enviar comentarios
   selectionToolbar:
     title: Barra de selección
     pageDescription: Define qué acciones aparecen al seleccionar texto y dónde se muestra la barra.
@@ -665,6 +679,12 @@ options:
         providerDescription: El proveedor de IA que genera la sugerencia
     display:
       title: Visualización
+      placement:
+        title: Posición
+        description: Elige en qué lado del texto seleccionado aparece la barra de selección. Si el lado elegido no tiene espacio, aparece en el otro
+        followDirection: Seguir la dirección de la selección
+        above: Siempre encima
+        below: Siempre debajo
       opacity:
         title: Opacidad
         description: Ajusta la opacidad de la barra de selección y de la ventana expandida que se abre desde ella
@@ -1741,7 +1761,7 @@ subtitles:
   requestAiSubtitles: Solicitar subtítulos con IA
   usingAiSubtitles: Usando subtítulos con IA
   settings: Ajustes de subtítulos
-  autoStartOnPlatform: "Iniciar automáticamente en los videos de $1"
+  autoStartOnPlatform: "Inicio automático en $1"
   toggle:
     enabled: Traducción de subtítulos activada
     disabled: Traducción de subtítulos desactivada
@@ -1802,6 +1822,26 @@ hostedAi:
     rateLimited: Demasiadas solicitudes, inténtalo de nuevo más tarde.
     guestRateLimited: Demasiadas solicitudes de invitado. Inténtalo de nuevo más tarde.
     userRateLimited: Demasiadas solicitudes. Inténtalo de nuevo más tarde.
+    modelUnavailable: "$1 no está disponible en este momento. Prueba con $2."
+    modelUnavailableNoAlternatives: "$1 no está disponible en este momento y no tienes ningún otro modelo de IA integrada disponible. Inténtalo de nuevo más tarde."
+    modelBusy: "$1 está saturado en este momento. Inténtalo de nuevo en un momento o cambia a $2."
+    modelBusyNoAlternatives: "$1 está saturado en este momento. Inténtalo de nuevo en un momento."
+  unavailable:
+    temporary: "$1 no está disponible temporalmente. Prueba con $2."
+    temporaryNoAlternatives: "$1 no está disponible temporalmente. Inténtalo de nuevo más tarde."
+    removed: "$1 ya no se ofrece. Prueba con $2."
+    removedNoAlternatives: "$1 ya no se ofrece. Elige otro proveedor."
+  actions:
+    chooseModel: "Elegir un modelo"
+  builtInAiPrompt:
+    logInTitle: "Inicia sesión para usar la IA integrada"
+    logInDescription: "La IA integrada es gratis al iniciar sesión, con unos 120.000 tokens por semana."
+    upgradeTitle: "Has usado la IA integrada de esta semana"
+    upgradeDescription: "Pro traduce unas 3000 páginas web al mes, y Ultra unas 10.000."
+    upgradeDescriptionPro: "Ultra traduce unas 10.000 páginas web al mes."
+    useMachineTranslation: "Usar traducción automática"
+    switched: "$1 ahora usa $2."
+    switchFailed: "No se pudo cambiar a la traducción automática. Inténtalo de nuevo."
 hotkey:
   control: Ctrl
   alt: Opción

@@ -160,7 +160,22 @@ options:
     configTitle: Provayder konfiqurasiyası
     addProvider: Provayder əlavə et
     builtInProvider: Daxili provayder
-    yourProviders: Sizin provayderləriniz
+    thirdPartyProviders: Üçüncü tərəf provayderləri
+    builtInModel:
+      reasoningDescription: "$1 modelinin cavab verməzdən əvvəl nə qədər düşünəcəyi. Yüksək səviyyələr çətin mətnlərin öhdəsindən daha yaxşı gəlir, amma daha yavaş cavab verir və kvotanızdan daha çox istifadə edir."
+      reasoningDefault: "Defolt"
+      reasoningLevels:
+        none: "Söndürülüb"
+        minimal: "Minimal"
+        low: "Aşağı"
+        medium: "Orta"
+        high: "Yüksək"
+        xhigh: "Çox yüksək"
+      unavailableTitle:
+        temporary: "$1 müvəqqəti olaraq əlçatan deyil"
+        removed: "$1 artıq təklif olunmur"
+      unavailableDescription: "İşləyə bilmədiyi müddətdə ondan istifadə edən funksiyalar xəta verir. Davam etmək üçün onları $1 modelinə keçirin."
+      unavailableDescriptionNoAlternatives: "İşləyə bilmədiyi müddətdə ondan istifadə edən funksiyalar xəta verir. Davam etmək üçün onları başqa provayderə keçirin."
     builtInAiUsage:
       title: Daxili süni intellekt kvotası
       remaining: "$1% qalıb"
@@ -632,7 +647,6 @@ options:
       lockPosition: Mövqeyi kilidlə
       unlockPosition: Mövqenin kilidini aç
       settings: Parametrlər
-      feedback: Rəy göndər
   selectionToolbar:
     title: Seçim alətlər paneli
     pageDescription: Mətn seçdikdə hansı əməliyyatların göründüyünü və alətlər panelinin harada açıldığını təyin edin.
@@ -665,6 +679,12 @@ options:
         providerDescription: Təklifi yaradan süni intellekt provayderi
     display:
       title: Görünüş
+      placement:
+        title: Mövqe
+        description: Alətlər panelinin seçilmiş mətnin hansı tərəfində görünəcəyini seçin. Seçilmiş tərəfdə yer yoxdursa, digər tərəfdə görünür
+        followDirection: Seçim istiqamətini izlə
+        above: Həmişə yuxarıda
+        below: Həmişə aşağıda
       opacity:
         title: Qeyri-şəffaflıq
         description: Seçim alətlər panelinin və ondan açılan geniş pəncərənin qeyri-şəffaflığını tənzimləyin
@@ -1734,7 +1754,7 @@ subtitles:
   requestAiSubtitles: Süni intellekt subtitrləri istə
   usingAiSubtitles: Süni intellekt subtitrlərindən istifadə olunur
   settings: Subtitr ayarları
-  autoStartOnPlatform: "$1 videolarında avtomatik başlat"
+  autoStartOnPlatform: "$1 üzərində avtomatik başlat"
   toggle:
     enabled: Subtitr tərcüməsi aktivdir
     disabled: Subtitr tərcüməsi deaktivdir
@@ -1795,6 +1815,26 @@ hostedAi:
     rateLimited: Həddindən artıq sorğu var, daha sonra yenidən cəhd edin.
     guestRateLimited: Qonaq sorğularının sayı həddindən artıq çoxdur. Daha sonra yenidən cəhd edin.
     userRateLimited: Həddindən artıq sorğu var. Daha sonra yenidən cəhd edin.
+    modelUnavailable: "$1 hazırda işləmir. Onun əvəzinə $2 modelini sınayın."
+    modelUnavailableNoAlternatives: "$1 hazırda işləmir və sizin üçün başqa daxili süni intellekt modeli yoxdur. Daha sonra yenidən cəhd edin."
+    modelBusy: "$1 hazırda çox yüklənib. Bir azdan yenidən cəhd edin və ya $2 modelinə keçin."
+    modelBusyNoAlternatives: "$1 hazırda çox yüklənib. Bir azdan yenidən cəhd edin."
+  unavailable:
+    temporary: "$1 müvəqqəti olaraq əlçatan deyil. Onun əvəzinə $2 modelini sınayın."
+    temporaryNoAlternatives: "$1 müvəqqəti olaraq əlçatan deyil. Daha sonra yenidən cəhd edin."
+    removed: "$1 artıq təklif olunmur. Onun əvəzinə $2 modelini sınayın."
+    removedNoAlternatives: "$1 artıq təklif olunmur. Başqa provayder seçin."
+  actions:
+    chooseModel: "Model seçin"
+  builtInAiPrompt:
+    logInTitle: "Daxili süni intellektdən istifadə üçün daxil olun"
+    logInDescription: "Daxil olduqda daxili süni intellekt pulsuzdur: həftədə təxminən 120 000 token."
+    upgradeTitle: "Bu həftənin daxili süni intellekti bitdi"
+    upgradeDescription: "Pro ayda təxminən 3 000, Ultra isə 10 000 veb səhifə tərcümə edir."
+    upgradeDescriptionPro: "Ultra ayda təxminən 10 000 veb səhifə tərcümə edir."
+    useMachineTranslation: "Maşın tərcüməsindən istifadə et"
+    switched: "$1 indi $2 istifadə edir."
+    switchFailed: "Maşın tərcüməsinə keçmək alınmadı. Yenidən cəhd edin."
 hotkey:
   control: Ctrl düyməsi
   alt: Option düyməsi

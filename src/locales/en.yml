@@ -160,7 +160,22 @@ options:
     configTitle: Provider config
     addProvider: Add provider
     builtInProvider: Built-in provider
-    yourProviders: Your providers
+    thirdPartyProviders: Third-party providers
+    builtInModel:
+      reasoningDescription: "How much $1 thinks before it answers. Higher levels handle hard text better, but answer more slowly and use more of your quota."
+      reasoningDefault: "Default"
+      reasoningLevels:
+        none: "Off"
+        minimal: "Minimal"
+        low: "Low"
+        medium: "Medium"
+        high: "High"
+        xhigh: "Extra high"
+      unavailableTitle:
+        temporary: "$1 is temporarily unavailable"
+        removed: "$1 is no longer offered"
+      unavailableDescription: "Features set to it show an error while it can't run. To keep going, switch them to $1."
+      unavailableDescriptionNoAlternatives: "Features set to it show an error while it can't run. To keep going, switch them to another provider."
     builtInAiUsage:
       title: Built-in AI quota
       remaining: "$1% left"
@@ -632,7 +647,6 @@ options:
       lockPosition: Lock position
       unlockPosition: Unlock position
       settings: Settings
-      feedback: Send feedback
   selectionToolbar:
     title: Selection Toolbar
     pageDescription: Set which actions appear when you select text, and where the toolbar shows up.
@@ -665,6 +679,12 @@ options:
         providerDescription: The AI provider that generates the suggestion
     display:
       title: Display
+      placement:
+        title: Position
+        description: Which side of the selected text the toolbar appears on. If the chosen side has no room, it appears on the other side.
+        followDirection: Follow selection direction
+        above: Always above
+        below: Always below
       opacity:
         title: Opacity
         description: Adjust the opacity of the selection toolbar and the expanded window opened from it
@@ -1883,7 +1903,7 @@ subtitles:
   requestAiSubtitles: Request AI subtitles
   usingAiSubtitles: Using AI subtitles
   settings: Subtitle settings
-  autoStartOnPlatform: "Start automatically on $1 videos"
+  autoStartOnPlatform: "Auto-start on $1"
   toggle:
     enabled: Subtitle translation on
     disabled: Subtitle translation off
@@ -1944,6 +1964,26 @@ hostedAi:
     rateLimited: Too many requests, please try again later.
     guestRateLimited: Too many guest requests. Please try again later.
     userRateLimited: Too many requests. Please try again later.
+    modelUnavailable: "$1 can't run right now. Try $2 instead."
+    modelUnavailableNoAlternatives: "$1 can't run right now, and no other Built-in AI model is available to you. Try again later."
+    modelBusy: "$1 is busy right now. Try again in a moment, or switch to $2."
+    modelBusyNoAlternatives: "$1 is busy right now. Try again in a moment."
+  unavailable:
+    temporary: "$1 is temporarily unavailable. Try $2 instead."
+    temporaryNoAlternatives: "$1 is temporarily unavailable. Try again later."
+    removed: "$1 is no longer offered. Try $2 instead."
+    removedNoAlternatives: "$1 is no longer offered. Choose another provider."
+  actions:
+    chooseModel: "Choose a model"
+  builtInAiPrompt:
+    logInTitle: "Log in to use Built-in AI"
+    logInDescription: "Built-in AI is free once you log in, with about 120,000 tokens a week."
+    upgradeTitle: "You've used this week's Built-in AI"
+    upgradeDescription: "Pro translates about 3,000 web pages a month, Ultra about 10,000."
+    upgradeDescriptionPro: "Ultra translates about 10,000 web pages a month."
+    useMachineTranslation: "Use machine translation"
+    switched: "$1 now uses $2."
+    switchFailed: "Couldn't switch to machine translation. Please try again."
 hotkey:
   control: Ctrl
   alt: Option

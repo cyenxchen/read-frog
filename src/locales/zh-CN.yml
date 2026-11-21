@@ -160,7 +160,22 @@ options:
     configTitle: 提供商配置
     addProvider: 添加提供商
     builtInProvider: 内置提供商
-    yourProviders: 我的提供商
+    thirdPartyProviders: 第三方提供商
+    builtInModel:
+      reasoningDescription: "$1 回答前思考的程度。档位越高，越能处理难懂的文本，但回答更慢，消耗的额度也更多。"
+      reasoningDefault: "默认"
+      reasoningLevels:
+        none: "关闭"
+        minimal: "极低"
+        low: "低"
+        medium: "中"
+        high: "高"
+        xhigh: "超高"
+      unavailableTitle:
+        temporary: "$1 暂时无法使用"
+        removed: "$1 已不再提供"
+      unavailableDescription: "它无法运行期间，用它的功能会报错。如需继续使用，请把这些功能改用 $1。"
+      unavailableDescriptionNoAlternatives: "它无法运行期间，用它的功能会报错。如需继续使用，请把这些功能改用其他提供商。"
     builtInAiUsage:
       title: 内置 AI 额度
       remaining: "剩余 $1%"
@@ -632,7 +647,6 @@ options:
       lockPosition: 锁定位置
       unlockPosition: 解锁位置
       settings: 设置
-      feedback: 发送反馈
   selectionToolbar:
     title: 选择工具栏
     pageDescription: 设置选中文本时出现哪些操作，以及工具栏在哪些网站显示。
@@ -665,6 +679,12 @@ options:
         providerDescription: 用于生成「猜你想存」的 AI 提供商
     display:
       title: 显示
+      placement:
+        title: 位置
+        description: 工具栏出现在选中文本的哪一侧。选定的一侧没有空间时，会改到另一侧显示
+        followDirection: 跟随划选方向
+        above: 始终在上方
+        below: 始终在下方
       opacity:
         title: 透明度
         description: 调整选择工具栏及其展开内容窗的透明度
@@ -1746,7 +1766,7 @@ subtitles:
   requestAiSubtitles: 请求 AI 字幕
   usingAiSubtitles: 正在使用 AI 字幕中
   settings: 字幕设置
-  autoStartOnPlatform: "打开 $1 视频时自动开启"
+  autoStartOnPlatform: "在 $1 上自动开启"
   toggle:
     enabled: 字幕翻译已开启
     disabled: 字幕翻译已关闭
@@ -1807,6 +1827,26 @@ hostedAi:
     rateLimited: 请求过于频繁，请稍后再试
     guestRateLimited: 游客请求过于频繁，请稍后再试
     userRateLimited: 请求过于频繁，请稍后再试
+    modelUnavailable: "$1 暂时无法使用，可改用 $2"
+    modelUnavailableNoAlternatives: "$1 暂时无法使用，目前也没有其他可用的内置 AI 模型，请稍后再试"
+    modelBusy: "$1 当前繁忙，请稍后再试，或改用 $2"
+    modelBusyNoAlternatives: "$1 当前繁忙，请稍后再试"
+  unavailable:
+    temporary: "$1 暂时无法使用，可改用 $2"
+    temporaryNoAlternatives: "$1 暂时无法使用，请稍后再试"
+    removed: "$1 已不再提供，可改用 $2"
+    removedNoAlternatives: "$1 已不再提供，请改用其他提供商"
+  actions:
+    chooseModel: "选择模型"
+  builtInAiPrompt:
+    logInTitle: "登录后使用内置 AI"
+    logInDescription: "登录后即可免费使用内置 AI，每周约 12 万 token。"
+    upgradeTitle: "本周的内置 AI 额度用完了"
+    upgradeDescription: "Pro 每月约可翻译 3,000 个网页，Ultra 约 10,000 个。"
+    upgradeDescriptionPro: "Ultra 每月约可翻译 10,000 个网页。"
+    useMachineTranslation: "改用机器翻译"
+    switched: "$1已改用 $2"
+    switchFailed: "没能切换到机器翻译，请重试"
 hotkey:
   control: Ctrl
   alt: Option

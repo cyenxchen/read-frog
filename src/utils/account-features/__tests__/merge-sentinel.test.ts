@@ -3,7 +3,7 @@ import { posix } from "node:path"
 import { fileURLToPath } from "node:url"
 import { expect, it, vi } from "vitest"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
-import { BUILT_IN_AI_PROVIDER_IDS } from "@/utils/constants/provider-ids"
+import { isBuiltInAiProviderId } from "@/utils/constants/provider-ids"
 import { DEFAULT_PROVIDER_CONFIG } from "@/utils/constants/providers"
 import { remapHiddenProviderRefs } from "../remap-hidden-providers"
 
@@ -85,6 +85,7 @@ it("keeps the account-client import inventory reviewed", () => {
     "components/custom-action/save-to-notebase-dialog-host.tsx",
     "components/custom-action/use-save-to-notebase.ts",
     "components/llm-providers/provider-selector.tsx",
+    "components/llm-providers/use-built-in-ai-models.ts",
     "components/llm-providers/use-hosted-ai-provider-options.ts",
     "components/llm-providers/use-hosted-ai-status.ts",
     "components/test-orpc.tsx",
@@ -109,7 +110,7 @@ it("keeps the account-client import inventory reviewed", () => {
     "entrypoints/options/pages/video-subtitles/ai-quota/index.tsx",
     "entrypoints/popup/app.tsx",
     "entrypoints/popup/components/providers-field.tsx",
-    "entrypoints/translation-hub/components/translation-service-dropdown.tsx",
+    "utils/hosted-ai/upgrade-plan.ts",
     "utils/orpc/background-client.ts",
     "utils/orpc/client.ts",
     "utils/subtitles/ai/access-guard.ts",
@@ -128,7 +129,7 @@ it("leaves only the parked note-suggestion ID in defaults with a usable LLM", ()
   const remapped = remapHiddenProviderRefs(config)
   const hiddenPaths: string[] = []
   function visit(value: unknown, path: string[]) {
-    if (typeof value === "string" && BUILT_IN_AI_PROVIDER_IDS.some((id) => id === value)) {
+    if (typeof value === "string" && isBuiltInAiProviderId(value)) {
       hiddenPaths.push(path.join("."))
     } else if (value && typeof value === "object") {
       Object.entries(value).forEach(([key, child]) => visit(child, [...path, key]))

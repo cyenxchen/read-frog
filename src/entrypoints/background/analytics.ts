@@ -3,6 +3,8 @@ import type { CaptureResult } from "posthog-js/dist/module.no-external"
 import type {
   AnalyticsFailureReason,
   AnalyticsFeature,
+  BuiltInAiPromptEvent,
+  FeatureProviderAnalytics,
   FeatureUsedEventProperties,
   SurfaceByFeature,
 } from "@/types/analytics"
@@ -11,7 +13,16 @@ import { posthog } from "posthog-js/dist/module.no-external"
 import { match } from "ts-pattern"
 import { storage } from "#imports"
 import { env } from "@/env"
-import { ANALYTICS_FAILURE_REASONS, ANALYTICS_FEATURE, NOTE_SAVE_PATHS } from "@/types/analytics"
+import {
+  ANALYTICS_FAILURE_REASONS,
+  ANALYTICS_FEATURE,
+  ANALYTICS_FEATURES,
+  BUILT_IN_AI_PROMPT_ACTIONS,
+  BUILT_IN_AI_PROMPT_KINDS,
+  BUILT_IN_AI_PROMPT_PRESENTATIONS,
+  BUILT_IN_AI_PROMPT_TRIGGERS,
+  NOTE_SAVE_PATHS,
+} from "@/types/analytics"
 import { translationModeSchema } from "@/types/config/translate"
 import { normalizeFeatureProviderAnalytics } from "@/utils/analytics-provider"
 import {
@@ -245,10 +256,20 @@ function normalizeAnalyticsPropertyKey(key: string): string {
   return key.replaceAll(/[$_\-\s]/g, "").toLowerCase()
 }
 
+/**
+ * Kept although it says "model": its value is a Built-in AI catalog id, not a
+ * user's own model name. Only normalizeFeatureProviderAnalytics writes it, only
+ * on read-frog-built-in-ai events, and only after classifyBuiltInAiModel has
+ * checked it as a catalog id. Every other key with "model" in it still goes.
+ */
+const BUILT_IN_AI_MODEL_PROPERTY = "built_in_ai_model" satisfies keyof FeatureProviderAnalytics
+
 function isBlockedAnalyticsProperty(key: string, preserveRootToken: boolean): boolean {
   const normalizedKey = normalizeAnalyticsPropertyKey(key)
 
   if (preserveRootToken && key === "token") return false
+  // An event's own property only, like the token: never in $set or nested.
+  if (preserveRootToken && key === BUILT_IN_AI_MODEL_PROPERTY) return false
   if (BLOCKED_ANALYTICS_PROPERTY_KEYS.has(normalizedKey)) return true
   if (normalizedKey.startsWith("sdkdebug")) return true
   if (normalizedKey.startsWith("prevpageview") || normalizedKey.startsWith("previouspageview")) {
@@ -418,7 +439,11 @@ function normalizeFeatureUsedEvent(
   const common = {
     outcome: properties.outcome,
     latency_ms: properties.latency_ms,
-    ...normalizeFeatureProviderAnalytics(properties.provider, properties.backend_kind),
+    ...normalizeFeatureProviderAnalytics(
+      properties.provider,
+      properties.backend_kind,
+      properties.built_in_ai_model,
+    ),
     ...(properties.outcome === "failure" && isFailureReason(properties.failure_reason)
       ? { failure_reason: properties.failure_reason }
       : {}),
@@ -577,6 +602,42 @@ function normalizeFeatureUsedEvent(
       surface: event.surface,
     }))
     .exhaustive(() => null)
+}
+
+function isOneOf<const T extends string>(values: readonly T[], value: unknown): value is T {
+  return typeof value === "string" && (values as readonly string[]).includes(value)
+}
+
+/**
+ * Picks only the documented fields of a Built-in AI prompt event, and drops one with a
+ * value this version doesn't know, such as from a newer content script.
+ */
+export function normalizeBuiltInAiPromptEvent(
+  input: BuiltInAiPromptEvent,
+): BuiltInAiPromptEvent | null {
+  const { feature, kind, presentation, trigger } = input.properties
+  if (
+    !isOneOf(ANALYTICS_FEATURES, feature) ||
+    !isOneOf(BUILT_IN_AI_PROMPT_KINDS, kind) ||
+    !isOneOf(BUILT_IN_AI_PROMPT_PRESENTATIONS, presentation) ||
+    !isOneOf(BUILT_IN_AI_PROMPT_TRIGGERS, trigger)
+  ) {
+    return null
+  }
+
+  return match(input)
+    .with({ event: "built_in_ai_prompt_shown" }, ({ event }) => ({
+      event,
+      properties: { feature, kind, presentation, trigger },
+    }))
+    .with({ event: "built_in_ai_prompt_action" }, ({ event, properties }) => {
+      if (!isOneOf(BUILT_IN_AI_PROMPT_ACTIONS, properties.action)) return null
+      return {
+        event,
+        properties: { feature, kind, presentation, trigger, action: properties.action },
+      }
+    })
+    .otherwise(() => null)
 }
 
 export function createBackgroundAnalytics(
@@ -755,11 +816,39 @@ export function createBackgroundAnalytics(
     await captureFeatureUsedEventWithCache(normalizedProperties, runtime.featureUsageCache)
   }
 
+  /**
+   * The Built-in AI prompt's two events. Each prompt is one wall someone hit, so unlike
+   * `feature_used` there is no daily throttle: the count is the point. Off with the
+   * rest of analytics.
+   */
+  async function captureBuiltInAiPromptEventInBackground(
+    input: BuiltInAiPromptEvent,
+  ): Promise<void> {
+    if (!(await isAnalyticsEnabled())) {
+      return
+    }
+
+    const normalized = normalizeBuiltInAiPromptEvent(input)
+    if (!normalized) {
+      runtime.warn("Dropped an incomplete Built-in AI prompt event")
+      return
+    }
+
+    try {
+      const client = await getPostHogClient()
+      client?.capture(normalized.event, normalized.properties)
+    } catch (error) {
+      runtime.warn(`Failed to capture ${normalized.event} in background`, { error })
+    }
+  }
+
   return {
     captureFeatureUsedEventInBackground,
+    captureBuiltInAiPromptEventInBackground,
   }
 }
 
 const backgroundAnalytics = createBackgroundAnalytics()
 
-export const { captureFeatureUsedEventInBackground } = backgroundAnalytics
+export const { captureFeatureUsedEventInBackground, captureBuiltInAiPromptEventInBackground } =
+  backgroundAnalytics

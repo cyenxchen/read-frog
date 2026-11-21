@@ -6,8 +6,8 @@ import { describe, expect, it, vi } from "vitest"
 import { configSchema } from "@/types/config/config"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
 import {
-  BUILT_IN_AI_PROVIDER_ID,
-  BUILT_IN_AI_ADVANCE_PROVIDER_ID,
+  DEFAULT_BUILT_IN_AI_PROVIDER_ID,
+  getBuiltInAiProviderId,
 } from "@/utils/constants/provider-ids"
 import { DEFAULT_PROVIDER_CONFIG } from "@/utils/constants/providers"
 import { remapHiddenProviderRefs } from "../remap-hidden-providers"
@@ -20,8 +20,8 @@ const latestExample = Object.keys(exampleModules).sort(
 )[0]!
 const { testSeries } = await exampleModules[latestExample]!()
 
-const free = BUILT_IN_AI_PROVIDER_ID
-const advance = BUILT_IN_AI_ADVANCE_PROVIDER_ID
+const free: string = DEFAULT_BUILT_IN_AI_PROVIDER_ID
+const advance: string = getBuiltInAiProviderId("another-built-in-model")
 const providers = [
   { id: "no-key", provider: "openai", enabled: true, apiKey: "   " },
   { id: "first", provider: "anthropic", enabled: true, apiKey: "first-key" },
@@ -373,3 +373,12 @@ it("uses the highest-numbered config example module", async () => {
   const newest = await exampleModules[`/src/utils/config/__tests__/example/v${latestVersion}.ts`]!()
   expect(testSeries).toBe(newest.testSeries)
 })
+
+it.each(["read-frog-free-ai", "read-frog-advance-ai"])(
+  "remaps the pre-v127 Built-in AI id %s",
+  (legacyId) => {
+    const c = fixture()
+    c.pageTranslation.providerId = legacyId
+    expect(remapHiddenProviderRefs(c).pageTranslation.providerId).toBe("first")
+  },
+)

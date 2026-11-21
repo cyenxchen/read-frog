@@ -160,7 +160,22 @@ options:
     configTitle: プロバイダー設定
     addProvider: プロバイダーを追加
     builtInProvider: 組み込みプロバイダー
-    yourProviders: マイプロバイダー
+    thirdPartyProviders: サードパーティのプロバイダー
+    builtInModel:
+      reasoningDescription: "$1 が回答する前にどれだけ考えるかです。レベルが高いほど難しい文章をうまく扱えますが、回答が遅くなり、クォータの消費も増えます。"
+      reasoningDefault: "デフォルト"
+      reasoningLevels:
+        none: "オフ"
+        minimal: "最小"
+        low: "低"
+        medium: "中"
+        high: "高"
+        xhigh: "最高"
+      unavailableTitle:
+        temporary: "$1 は一時的に利用できません"
+        removed: "$1 は提供が終了しました"
+      unavailableDescription: "利用できない間、これを使う機能はエラーになります。引き続き使うには、それらの機能を $1 に切り替えてください。"
+      unavailableDescriptionNoAlternatives: "利用できない間、これを使う機能はエラーになります。引き続き使うには、それらの機能を別のプロバイダーに切り替えてください。"
     builtInAiUsage:
       title: 組み込み AI クォータ
       remaining: "残り $1%"
@@ -631,7 +646,6 @@ options:
       lockPosition: 位置を固定
       unlockPosition: 位置の固定を解除
       settings: 設定
-      feedback: フィードバックを送信
   selectionToolbar:
     title: 選択ツールバー
     pageDescription: テキストを選択したときに表示するアクションと、ツールバーを表示するサイトを設定します。
@@ -664,6 +678,12 @@ options:
         providerDescription: 保存候補を生成する AI プロバイダー
     display:
       title: 表示
+      placement:
+        title: 位置
+        description: 選択したテキストのどちら側にツールバーを表示するかを選びます。選んだ側に空きがない場合は反対側に表示します
+        followDirection: 選択方向に合わせる
+        above: 常に上
+        below: 常に下
       opacity:
         title: 透明度
         description: 選択ツールバーとそこから開く展開ウィンドウの透明度を調整します
@@ -1736,7 +1756,7 @@ subtitles:
   requestAiSubtitles: AI字幕をリクエスト
   usingAiSubtitles: AI字幕を使用中
   settings: 字幕設定
-  autoStartOnPlatform: "$1 の動画を開いたら自動で開始"
+  autoStartOnPlatform: "$1 で自動開始"
   toggle:
     enabled: 字幕翻訳をオンにしました
     disabled: 字幕翻訳をオフにしました
@@ -1797,6 +1817,26 @@ hostedAi:
     rateLimited: リクエストが多すぎます。後でもう一度お試しください。
     guestRateLimited: ゲストからのリクエストが多すぎます。後でもう一度お試しください。
     userRateLimited: リクエストが多すぎます。後でもう一度お試しください。
+    modelUnavailable: "$1 は現在利用できません。代わりに $2 をお試しください。"
+    modelUnavailableNoAlternatives: "$1 は現在利用できず、ほかに利用できる組み込み AI モデルもありません。しばらくしてからもう一度お試しください。"
+    modelBusy: "$1 は現在混み合っています。少し待ってからもう一度お試しいただくか、$2 に切り替えてください。"
+    modelBusyNoAlternatives: "$1 は現在混み合っています。少し待ってからもう一度お試しください。"
+  unavailable:
+    temporary: "$1 は一時的に利用できません。代わりに $2 をお試しください。"
+    temporaryNoAlternatives: "$1 は一時的に利用できません。しばらくしてからもう一度お試しください。"
+    removed: "$1 は提供が終了しました。代わりに $2 をお試しください。"
+    removedNoAlternatives: "$1 は提供が終了しました。別のプロバイダーを選んでください。"
+  actions:
+    chooseModel: "モデルを選択"
+  builtInAiPrompt:
+    logInTitle: "ログインして組み込み AI を使う"
+    logInDescription: "ログインすると、組み込み AI を週に約 12 万トークンまで無料で使えます。"
+    upgradeTitle: "今週の組み込み AI を使い切りました"
+    upgradeDescription: "Pro なら毎月約 3,000 件、Ultra なら約 10,000 件のウェブページを翻訳できます。"
+    upgradeDescriptionPro: "Ultra なら毎月約 10,000 件のウェブページを翻訳できます。"
+    useMachineTranslation: "機械翻訳を使う"
+    switched: "$1は $2 を使うようになりました。"
+    switchFailed: "機械翻訳に切り替えられませんでした。もう一度お試しください。"
 hotkey:
   control: Ctrl
   alt: Option

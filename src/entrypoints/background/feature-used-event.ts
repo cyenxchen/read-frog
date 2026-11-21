@@ -3,14 +3,25 @@ import { recordFeatureActiveDay } from "@/utils/feature-active-days"
 import { onMessage } from "@/utils/message"
 
 type CaptureFeatureUsedEvent = typeof import("./analytics").captureFeatureUsedEventInBackground
+type CaptureBuiltInAiPromptEvent =
+  typeof import("./analytics").captureBuiltInAiPromptEventInBackground
 
-export const captureFeatureUsedEventInBackground: CaptureFeatureUsedEvent =
-  !import.meta.env.PROD && ACCOUNT_FEATURES_ENABLED
-    ? async (...args) => {
-        const analytics = await import("./analytics")
-        await analytics.captureFeatureUsedEventInBackground(...args)
-      }
-    : async () => {}
+// fork:account-off — a dynamic import, so production builds leave PostHog out.
+const ANALYTICS_ENABLED = !import.meta.env.PROD && ACCOUNT_FEATURES_ENABLED
+
+export const captureFeatureUsedEventInBackground: CaptureFeatureUsedEvent = ANALYTICS_ENABLED
+  ? async (...args) => {
+      const analytics = await import("./analytics")
+      await analytics.captureFeatureUsedEventInBackground(...args)
+    }
+  : async () => {}
+
+const captureBuiltInAiPromptEventInBackground: CaptureBuiltInAiPromptEvent = ANALYTICS_ENABLED
+  ? async (...args) => {
+      const analytics = await import("./analytics")
+      await analytics.captureBuiltInAiPromptEventInBackground(...args)
+    }
+  : async () => {}
 
 /**
  * Sole subscriber to the feature-used event, fanning it out to the two consumers that
@@ -37,5 +48,9 @@ export function setupFeatureUsedEventHandlers(): void {
     // The sender's top-level tab, not anything from the payload, identifies the page:
     // it reflects the site the user is on even when the feature ran in an iframe.
     await captureFeatureUsedEventInBackground(message.data, message.sender?.tab)
+  })
+
+  onMessage("trackBuiltInAiPromptEvent", async (message) => {
+    await captureBuiltInAiPromptEventInBackground(message.data)
   })
 }

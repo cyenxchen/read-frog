@@ -1,8 +1,11 @@
+import type { ErrorAction } from "@/utils/error-action"
 import { Icon } from "@iconify/react"
 import { LANGUAGE_ENGLISH_NAMES } from "@read-frog/definitions"
 import { useMutation } from "@tanstack/react-query"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useEffect, useEffectEvent, useRef } from "react"
+import { ModelIcon } from "@/components/llm-providers/model-icon"
+import { useBuiltInAiModels } from "@/components/llm-providers/use-built-in-ai-models"
 import ProviderIcon from "@/components/provider-icon"
 import { useTheme } from "@/components/providers/theme-provider"
 import { Button } from "@/components/ui/base-ui/button"
@@ -16,21 +19,43 @@ import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { PROVIDER_ITEMS } from "@/utils/constants/providers"
 import { streamBackgroundText } from "@/utils/content-script/background-stream-client"
 import { getRandomUUID } from "@/utils/crypto-polyfill"
+import { logInAction, upgradeAction } from "@/utils/error-action"
 import { resolveGlossaryTerms } from "@/utils/glossary/active-matcher"
 import { executeTranslate } from "@/utils/host/translate/execute-translate"
 import { prepareTranslationText } from "@/utils/host/translate/text-preparation"
+import { findHostedAiModel } from "@/utils/hosted-ai/models"
+import { getBuiltInAiRefusalKind } from "@/utils/hosted-ai/refusal"
 import { i18n } from "@/utils/i18n"
 import { getTranslatePromptFromConfig } from "@/utils/prompts/translate"
-import {
-  BUILT_IN_AI_PROVIDER_LOGO,
-  resolveProviderRefForCapability,
-} from "@/utils/providers/provider-registry"
+import { resolveProviderRefForCapability } from "@/utils/providers/provider-registry"
 import { cn } from "@/utils/styles/utils"
 import {
   selectedProviderIdsAtom,
   translateRequestAtom,
   translationCardExpandedStateAtom,
 } from "../atoms"
+
+/**
+ * The button a card's error leads with when Built-in AI refused it: log in for a guest,
+ * upgrade for a spent pool. The server leaves the upgrade off Ultra's refusal, which has
+ * no plan above it, so the card does too. The card has room for the button, so it gets no
+ * dialog.
+ */
+export function getTranslationHubErrorAction(error: unknown): ErrorAction | undefined {
+  switch (getBuiltInAiRefusalKind(error)) {
+    case "logIn":
+      return logInAction()
+    case "upgrade": {
+      const serverAction =
+        typeof error === "object" && error !== null && "action" in error ? error.action : undefined
+      return serverAction
+        ? upgradeAction("extension_quota_exhausted", ANALYTICS_FEATURE.TRANSLATION_HUB)
+        : undefined
+    }
+    default:
+      return undefined
+  }
+}
 
 interface TranslationCardProps {
   providerId: string
@@ -53,13 +78,15 @@ export function TranslationCard({
   const setExpandedById = useSetAtom(translationCardExpandedStateAtom)
   const { play, stop, isFetching, isPlaying } = useTextToSpeech(ANALYTICS_SURFACE.TRANSLATION_HUB)
 
-  const provider = resolveProviderRefForCapability("pageTranslation", providersConfig, providerId)
+  const { models: builtInAiModels } = useBuiltInAiModels()
+  const provider = resolveProviderRefForCapability(
+    "pageTranslation",
+    providersConfig,
+    providerId,
+    builtInAiModels,
+  )
   const providerLogo =
-    provider?.kind === "system"
-      ? BUILT_IN_AI_PROVIDER_LOGO
-      : provider?.kind === "local"
-        ? PROVIDER_ITEMS[provider.config.provider].logo(theme)
-        : undefined
+    provider?.kind === "local" ? PROVIDER_ITEMS[provider.config.provider].logo(theme) : undefined
 
   // Track request IDs to ignore stale responses from slow providers
   const requestIdRef = useRef(0)
@@ -121,7 +148,6 @@ export function TranslationCard({
               {
                 providerKind: "system",
                 providerId: provider.id,
-                modelTier: provider.modelTier,
                 requestId: getRandomUUID(),
                 hostedFeature: "pageTranslation",
                 instructions: systemPrompt,
@@ -202,6 +228,7 @@ export function TranslationCard({
   if (!provider) return null
 
   const hasContent = mutation.isError || (mutation.data !== undefined && mutation.data !== "")
+  const errorAction = mutation.isError ? getTranslationHubErrorAction(mutation.error) : undefined
   const speechAction = isFetching
     ? "speak.fetchingAudio"
     : isPlaying
@@ -232,7 +259,13 @@ export function TranslationCard({
         )}
       >
         <div className="flex items-center space-x-2">
-          {providerLogo ? (
+          {provider?.kind === "system" ? (
+            <ModelIcon
+              vendor={findHostedAiModel(builtInAiModels, provider.model)?.vendor}
+              name={provider.name}
+              theme={theme}
+            />
+          ) : providerLogo ? (
             <ProviderIcon logo={providerLogo} name={provider.name} size="sm" />
           ) : (
             <div className="flex h-5 w-5 items-center justify-center rounded bg-muted text-xs text-muted-foreground">
@@ -335,6 +368,16 @@ export function TranslationCard({
                   ? mutation.error.message
                   : i18n.t("translationHub.translationFailedFallback")}
               </p>
+              {errorAction && (
+                <Button
+                  size="sm"
+                  variant="accent"
+                  className="mt-2"
+                  onClick={() => window.open(errorAction.url, "_blank", "noopener")}
+                >
+                  {errorAction.label}
+                </Button>
+              )}
             </div>
           ) : (
             <div

@@ -10,12 +10,14 @@ import { pollUntil } from "@/utils/poll"
 import { NoSubtitlesError, VideoNotFoundError } from "@/utils/subtitles/errors"
 import { readTrackLanguagePreference } from "@/utils/subtitles/read-track-language-preference"
 import { pickByLanguage } from "@/utils/subtitles/track-language"
-import { cuesToFragments } from "./cues"
+import { alignToVideo, cuesToFragments } from "./cues"
 
 interface TextTrackFetcherOptions {
   resolveVideo: () => HTMLVideoElement | null
   getVideoId: () => string | null
   isSourceTrack?: (track: TextTrack) => boolean
+  // A track that may count from a broadcast hour; only these are moved back onto the video.
+  isBroadcastTimed?: (track: TextTrack) => boolean
 }
 
 const SUBTITLE_KINDS = new Set<TextTrackKind>(["subtitles", "captions"])
@@ -52,7 +54,7 @@ export class TextTrackFetcher implements SubtitlesFetcher {
     const byLanguage = this.selectTrackByLanguage(video, preference)
     if (byLanguage && byLanguage !== usual) {
       try {
-        return await this.loadTrack(byLanguage)
+        return await this.loadTrack(byLanguage, video)
       } catch (error) {
         if (!(error instanceof NoSubtitlesError)) throw error
         // A player may load cues only for the track it shows: the usual pick still works, and
@@ -64,17 +66,20 @@ export class TextTrackFetcher implements SubtitlesFetcher {
     if (!usual) {
       throw new NoSubtitlesError()
     }
-    return this.loadTrack(usual)
+    return this.loadTrack(usual, video)
   }
 
-  private async loadTrack(track: TextTrack): Promise<SubtitlesFragment[]> {
+  private async loadTrack(track: TextTrack, video: HTMLVideoElement): Promise<SubtitlesFragment[]> {
     const trackHash = this.buildTrackHash(track)
     if (this.subtitles.length > 0 && this.cachedTrackHash === trackHash) {
       return this.subtitles
     }
 
     this.ensureLoading(track)
-    const fragments = cuesToFragments(await this.waitForCues(track))
+    const raw = cuesToFragments(await this.waitForCues(track))
+    const fragments = this.options.isBroadcastTimed?.(track)
+      ? alignToVideo(raw, await this.waitForDuration(video))
+      : raw
     if (fragments.length === 0) {
       throw new NoSubtitlesError()
     }
@@ -255,5 +260,19 @@ export class TextTrackFetcher implements SubtitlesFetcher {
       throw new NoSubtitlesError()
     }
     return cues
+  }
+
+  // Cues can land before the video's length is known (NaN before metadata, Infinity until a
+  // streamed source sets it), and the fragments are cached once aligned. A live video never gets
+  // a length, so it waits out the timeout and keeps its times.
+  private async waitForDuration(video: HTMLVideoElement): Promise<number> {
+    const duration = await pollUntil(
+      () => (Number.isFinite(video.duration) ? video.duration : null),
+      {
+        timeoutMs: TEXT_TRACK_CUE_WAIT_TIMEOUT_MS,
+        intervalMs: TEXT_TRACK_CUE_POLL_INTERVAL_MS,
+      },
+    )
+    return duration ?? Number.NaN
   }
 }

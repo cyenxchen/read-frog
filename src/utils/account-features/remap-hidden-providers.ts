@@ -4,8 +4,9 @@ import {
   isTranslateProvider,
 } from "@/types/config/provider/constants"
 import {
-  BUILT_IN_AI_ADVANCE_PROVIDER_ID,
-  BUILT_IN_AI_PROVIDER_ID,
+  DEFAULT_BUILT_IN_AI_PROVIDER_ID,
+  isBuiltInAiProviderId,
+  resolveLegacyProviderId,
 } from "@/utils/constants/provider-ids"
 import { providerSupportsTranslationOnlyMode } from "@/utils/providers/translation-only-gate"
 import { ACCOUNT_FEATURES_ENABLED } from "./flag"
@@ -36,7 +37,7 @@ interface RemappableConfig {
 }
 
 function isHiddenId(id: string | undefined): boolean {
-  return id === BUILT_IN_AI_PROVIDER_ID || id === BUILT_IN_AI_ADVANCE_PROVIDER_ID
+  return id !== undefined && isBuiltInAiProviderId(resolveLegacyProviderId(id))
 }
 
 function isUsableLlm(provider: RemapProvider): boolean {
@@ -104,9 +105,9 @@ export function remapHiddenProviderRefs<T extends RemappableConfig>(config: T): 
     ? toolbar.customActions
     : remappedActions
   const noteSuggestion =
-    toolbar.noteSuggestion.providerId === BUILT_IN_AI_PROVIDER_ID
+    toolbar.noteSuggestion.providerId === DEFAULT_BUILT_IN_AI_PROVIDER_ID
       ? toolbar.noteSuggestion
-      : { ...toolbar.noteSuggestion, providerId: BUILT_IN_AI_PROVIDER_ID }
+      : { ...toolbar.noteSuggestion, providerId: DEFAULT_BUILT_IN_AI_PROVIDER_ID }
   const selectionToolbar =
     features === toolbar.features &&
     builtInActions === toolbar.builtInActions &&

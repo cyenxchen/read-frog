@@ -18,14 +18,17 @@ import {
   getProviderIdsForCapability,
 } from "@/utils/providers/provider-registry"
 import { normalizeSelectionToolbarLists } from "@/utils/selection-toolbar-order"
+import { builtInAiConfigSchema } from "./built-in-ai"
 import { floatingButtonSchema } from "./floating-button"
 import { glossaryConfigSchema } from "./glossary"
 import { languageDetectionConfigSchema } from "./language-detection"
 import { storedLanguageTagSchema } from "./language-tag"
 import { providersConfigSchema } from "./provider"
+import { storedProviderIdListSchema, storedProviderIdSchema } from "./provider-id"
 import {
   selectionToolbarBuiltInActionsSchema,
   selectionToolbarCustomActionsSchema,
+  selectionToolbarPlacementSchema,
 } from "./selection-toolbar"
 import { shortcutSchema } from "./shortcut"
 import { siteRulesConfigSchema } from "./site-rules"
@@ -41,7 +44,7 @@ const languageSchema = z.object({
 
 const selectionToolbarFeatureSchema = z.object({
   enabled: z.boolean(),
-  providerId: z.string().nonempty(),
+  providerId: storedProviderIdSchema,
   shortcut: shortcutSchema,
 })
 
@@ -79,6 +82,9 @@ const selectionToolbarSchema = z
     enabled: z.boolean(),
     disabledSelectionToolbarPatterns: z.array(z.string()),
     opacity: z.number().min(MIN_SELECTION_OVERLAY_OPACITY).max(MAX_SELECTION_OVERLAY_OPACITY),
+    // `.default()` lets a config stored before v128 parse in UI contexts that
+    // load ahead of the background migration.
+    placement: selectionToolbarPlacementSchema.default("followDirection"),
     features: z.object({
       translate: selectionToolbarFeatureSchema,
       speak: selectionToolbarSpeakFeatureSchema,
@@ -98,7 +104,7 @@ const selectionToolbarSchema = z
     noteSuggestion: z.object({
       enabled: z.boolean(),
       actionId: z.string().nonempty(),
-      providerId: z.string().nonempty(),
+      providerId: storedProviderIdSchema,
     }),
   })
   .superRefine((selectionToolbar, ctx) => {
@@ -131,7 +137,7 @@ const sideContentSchema = z.object({
 const translationHubSchema = z
   .object({
     shortcut: shortcutSchema,
-    selectedProviderIds: z.array(z.string().min(1)).nullable().default(null),
+    selectedProviderIds: storedProviderIdListSchema.nullable().default(null),
     sourceCode: storedLanguageTagSchema.or(z.literal("auto")).nullable().default(null),
     targetCode: storedLanguageTagSchema.nullable().default(null),
     // A missing ID in a pre-migration config must stay unset until v102 copies
@@ -166,7 +172,7 @@ const inputTranslationLangSchema = z.union([
 // input translation schema (triple-space trigger)
 const inputTranslationSchema = z.object({
   enabled: z.boolean(),
-  providerId: z.string().nonempty(),
+  providerId: storedProviderIdSchema,
   fromLang: inputTranslationLangSchema,
   toLang: inputTranslationLangSchema,
   enableCycle: z.boolean(),
@@ -214,6 +220,7 @@ export const configSchema = z
     uiLanguage: uiLanguageSchema,
     translationHub: translationHubSchema,
     glossary: glossaryConfigSchema,
+    builtInAi: builtInAiConfigSchema,
   })
   .superRefine((data, ctx) => {
     for (const featureKey of FEATURE_KEYS) {

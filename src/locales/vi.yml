@@ -160,7 +160,22 @@ options:
     configTitle: Cấu hình nhà cung cấp
     addProvider: Thêm nhà cung cấp
     builtInProvider: Nhà cung cấp tích hợp
-    yourProviders: Nhà cung cấp của bạn
+    thirdPartyProviders: Nhà cung cấp bên thứ ba
+    builtInModel:
+      reasoningDescription: "Mức độ $1 suy nghĩ trước khi trả lời. Mức càng cao càng xử lý tốt văn bản khó, nhưng trả lời chậm hơn và dùng nhiều hạn mức hơn."
+      reasoningDefault: "Mặc định"
+      reasoningLevels:
+        none: "Tắt"
+        minimal: "Tối thiểu"
+        low: "Thấp"
+        medium: "Trung bình"
+        high: "Cao"
+        xhigh: "Rất cao"
+      unavailableTitle:
+        temporary: "$1 tạm thời không khả dụng"
+        removed: "$1 không còn được cung cấp"
+      unavailableDescription: "Trong lúc mô hình này không chạy được, các tính năng dùng nó sẽ báo lỗi. Để tiếp tục, hãy chuyển chúng sang $1."
+      unavailableDescriptionNoAlternatives: "Trong lúc mô hình này không chạy được, các tính năng dùng nó sẽ báo lỗi. Để tiếp tục, hãy chuyển chúng sang nhà cung cấp khác."
     builtInAiUsage:
       title: Hạn mức AI tích hợp
       remaining: "Còn lại $1%"
@@ -631,7 +646,6 @@ options:
       lockPosition: Khóa vị trí
       unlockPosition: Mở khóa vị trí
       settings: Cài đặt
-      feedback: Gửi phản hồi
   selectionToolbar:
     title: Thanh công cụ chọn
     pageDescription: Đặt các thao tác xuất hiện khi bạn chọn văn bản và nơi hiển thị thanh công cụ.
@@ -664,6 +678,12 @@ options:
         providerDescription: Nhà cung cấp AI tạo ra gợi ý
     display:
       title: Hiển thị
+      placement:
+        title: Vị trí
+        description: Chọn thanh công cụ hiện ở phía nào của văn bản đã chọn. Nếu phía đã chọn không đủ chỗ, thanh sẽ hiện ở phía còn lại
+        followDirection: Theo hướng chọn
+        above: Luôn ở trên
+        below: Luôn ở dưới
       opacity:
         title: Độ mờ
         description: Điều chỉnh độ mờ của thanh công cụ chọn văn bản và cửa sổ mở rộng mở từ đó
@@ -1736,7 +1756,7 @@ subtitles:
   requestAiSubtitles: Yêu cầu phụ đề AI
   usingAiSubtitles: Đang dùng phụ đề AI
   settings: Cài đặt phụ đề
-  autoStartOnPlatform: "Tự động bật khi mở video $1"
+  autoStartOnPlatform: "Tự động bật trên $1"
   toggle:
     enabled: Đã bật dịch phụ đề
     disabled: Đã tắt dịch phụ đề
@@ -1797,6 +1817,26 @@ hostedAi:
     rateLimited: Quá nhiều yêu cầu, vui lòng thử lại sau.
     guestRateLimited: Quá nhiều yêu cầu từ khách. Vui lòng thử lại sau.
     userRateLimited: Quá nhiều yêu cầu. Vui lòng thử lại sau.
+    modelUnavailable: "Hiện không thể dùng $1. Hãy thử $2."
+    modelUnavailableNoAlternatives: "Hiện không thể dùng $1 và bạn không có mô hình AI tích hợp nào khác. Vui lòng thử lại sau."
+    modelBusy: "$1 đang quá tải. Vui lòng thử lại sau giây lát hoặc chuyển sang $2."
+    modelBusyNoAlternatives: "$1 đang quá tải. Vui lòng thử lại sau giây lát."
+  unavailable:
+    temporary: "$1 tạm thời không khả dụng. Hãy thử $2."
+    temporaryNoAlternatives: "$1 tạm thời không khả dụng. Vui lòng thử lại sau."
+    removed: "$1 không còn được cung cấp. Hãy thử $2."
+    removedNoAlternatives: "$1 không còn được cung cấp. Hãy chọn nhà cung cấp khác."
+  actions:
+    chooseModel: "Chọn mô hình"
+  builtInAiPrompt:
+    logInTitle: "Đăng nhập để dùng AI tích hợp"
+    logInDescription: "AI tích hợp miễn phí khi bạn đăng nhập, khoảng 120.000 token mỗi tuần."
+    upgradeTitle: "Bạn đã dùng hết AI tích hợp của tuần này"
+    upgradeDescription: "Pro dịch khoảng 3.000 trang web mỗi tháng, Ultra khoảng 10.000."
+    upgradeDescriptionPro: "Ultra dịch khoảng 10.000 trang web mỗi tháng."
+    useMachineTranslation: "Dùng dịch máy"
+    switched: "$1 giờ dùng $2."
+    switchFailed: "Không thể chuyển sang dịch máy. Vui lòng thử lại."
 hotkey:
   control: Ctrl
   alt: Option
