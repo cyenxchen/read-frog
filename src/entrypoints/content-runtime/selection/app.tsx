@@ -1,6 +1,7 @@
 import { useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { ToastProvider } from "@/components/ui/base-ui/toast"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import {
   SELECTION_CONTENT_OVERLAY_LAYERS,
@@ -10,6 +11,7 @@ import { useCornerToastSurface } from "@/utils/content-runtime/corner-toasts"
 import { AnnotationModePill } from "./annotation/mode-pill"
 import { AnnotationProvider } from "./annotation/provider"
 import { BuiltInAiPromptDialog } from "./built-in-ai-prompt-dialog"
+import { DifficultWords } from "./difficult-words"
 import { useInputTranslation } from "./input-translation"
 import { SelectionToolbar } from "./selection-toolbar"
 import { SelectionCustomActionProvider } from "./selection-toolbar/custom-action-button/provider"
@@ -60,6 +62,7 @@ export default function App({
             <AnnotationProvider>
               <SelectionToolbar />
               <AnnotationModePill />
+              {ACCOUNT_FEATURES_ENABLED && <DifficultWords />}
               <BuiltInAiPromptDialog />
             </AnnotationProvider>
           </SelectionSpeechProvider>

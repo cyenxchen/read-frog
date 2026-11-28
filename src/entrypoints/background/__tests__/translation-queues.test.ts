@@ -3,6 +3,7 @@ import type { MatchedTerm } from "@/utils/glossary/types"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
 import { BATCH_SEPARATOR, NO_TRANSLATION_SENTINEL } from "@/utils/constants/prompt"
+import { SEPARATED_BATCH_FORMAT } from "@/utils/prompts/batch-format"
 import { isTranslationCancelledError } from "@/utils/request/cancellation"
 
 const onMessageMock = vi.fn<(...args: any[]) => any>()
@@ -308,6 +309,126 @@ describe("translation queue helpers", () => {
     expect(putBatchRequestRecordMock).not.toHaveBeenCalled()
   }, 5_000)
 
+  it("names the Built-in AI call a request timed out on, as its attempts sent it", async () => {
+    vi.useFakeTimers()
+    ensureInitializedConfigMock.mockResolvedValue({
+      ...DEFAULT_CONFIG,
+      pageTranslation: {
+        ...DEFAULT_CONFIG.pageTranslation,
+        requestQueueConfig: { rate: 10, capacity: 10, timeoutMs: 1_000 },
+        batchQueueConfig: { maxCharactersPerBatch: 1000, maxItemsPerBatch: 1 },
+      },
+    })
+    // Never answers: the queue's own timeout is what fails the request.
+    runStreamTextInBackgroundMock.mockImplementation(() => new Promise(() => {}))
+
+    const { setupPageTranslationHandlers } = await import("../page-translation")
+    setupPageTranslationHandlers()
+    const handler = getRegisteredMessageHandler("enqueueTranslateRequest")
+    const caught = await fastForward(
+      handler({
+        data: {
+          text: "hello",
+          langConfig: DEFAULT_CONFIG.language,
+          providerRef: {
+            kind: "system",
+            providerId: "read-frog-ai:gpt-6-luna",
+            model: "gpt-6-luna",
+            modelTier: "normal",
+            modelRevision: "normal-r1",
+            reasoning: null,
+          },
+          scheduleAt: Date.now(),
+          hash: "hosted-timeout-hash",
+          hostedFeature: "pageTranslation",
+        },
+      }),
+    ).catch((error: unknown) => error)
+
+    const { getBuiltInAiRequestId } = await import("@/utils/hosted-ai/request-id")
+    expect((caught as Error).message).toMatch(/timed out/)
+    const lastSent = runStreamTextInBackgroundMock.mock.calls.at(-1)![0] as { requestId: string }
+    expect(getBuiltInAiRequestId(caught)).toBe(lastSent.requestId)
+  }, 10_000)
+
+  it("never names a call for a request on the user's own provider", async () => {
+    vi.useFakeTimers()
+    executeTranslateMock.mockRejectedValue(new Error("Invalid API key"))
+
+    const { setupPageTranslationHandlers } = await import("../page-translation")
+    setupPageTranslationHandlers()
+    const handler = getRegisteredMessageHandler("enqueueTranslateRequest")
+    const caught = await fastForward(
+      handler({
+        data: {
+          text: "hello",
+          langConfig: DEFAULT_CONFIG.language,
+          providerRef: localProviderRef(llmProvider),
+          scheduleAt: Date.now(),
+          hash: "byok-failure-hash",
+        },
+      }),
+    ).catch((error: unknown) => error)
+
+    expect((caught as Error).message).toBe("Invalid API key")
+    expect(caught).not.toHaveProperty("builtInAiRequestId")
+  }, 10_000)
+
+  it("names no Built-in AI call for another provider's error the queue fails it with", async () => {
+    vi.useFakeTimers()
+    ensureInitializedConfigMock.mockResolvedValue({
+      ...DEFAULT_CONFIG,
+      pageTranslation: {
+        ...DEFAULT_CONFIG.pageTranslation,
+        requestQueueConfig: { rate: 10, capacity: 10, timeoutMs: 20_000 },
+        batchQueueConfig: { maxCharactersPerBatch: 1000, maxItemsPerBatch: 1 },
+      },
+    })
+    // The Built-in AI request is still out when the user's own key is refused, which fails
+    // every queued task with that one error.
+    runStreamTextInBackgroundMock.mockImplementation(() => new Promise(() => {}))
+    const refused = Object.assign(new Error("Invalid API key"), { statusCode: 401 })
+    executeTranslateMock.mockRejectedValue(refused)
+
+    const { setupPageTranslationHandlers } = await import("../page-translation")
+    setupPageTranslationHandlers()
+    const handler = getRegisteredMessageHandler("enqueueTranslateRequest")
+    const hosted = handler({
+      data: {
+        text: "hello",
+        langConfig: DEFAULT_CONFIG.language,
+        providerRef: {
+          kind: "system",
+          providerId: "read-frog-ai:gpt-6-luna",
+          model: "gpt-6-luna",
+          modelTier: "normal",
+          modelRevision: "normal-r1",
+          reasoning: null,
+        },
+        scheduleAt: Date.now(),
+        hash: "hosted-drained-hash",
+        hostedFeature: "pageTranslation",
+      },
+    }).catch((error: unknown) => error)
+    await vi.advanceTimersByTimeAsync(250)
+    expect(runStreamTextInBackgroundMock).toHaveBeenCalled()
+    const byok = handler({
+      data: {
+        text: "world",
+        langConfig: DEFAULT_CONFIG.language,
+        providerRef: localProviderRef(llmProvider),
+        scheduleAt: Date.now(),
+        hash: "byok-drain-hash",
+      },
+    }).catch((error: unknown) => error)
+
+    const [hostedError, byokError] = await fastForward(Promise.all([hosted, byok]))
+
+    expect(byokError).toBe(refused)
+    expect(hostedError).toBe(refused)
+    expect(refused).not.toHaveProperty("builtInAiRequestId")
+  }, 10_000)
+
   it("routes hosted tasks through the shared user-configured request queue", async () => {
     ensureInitializedConfigMock.mockResolvedValue({
       ...DEFAULT_CONFIG,
@@ -506,8 +627,9 @@ describe("translation queue helpers", () => {
 
     expect(result).toBe("translated subtitle")
     expect(generateArticleSummaryMock).not.toHaveBeenCalled()
+    // A batch of one cue, numbered like any subtitle batch.
     expect(executeTranslateMock).toHaveBeenCalledWith(
-      "hello",
+      "[1]\nhello",
       DEFAULT_CONFIG.language,
       llmProvider,
       expect.any(Function),
@@ -520,6 +642,41 @@ describe("translation queue helpers", () => {
         },
       }),
     )
+  })
+
+  it("sends a subtitle batch as numbered cues and maps the numbered reply back to each cue", async () => {
+    ensureInitializedConfigMock.mockResolvedValue({
+      ...DEFAULT_CONFIG,
+      videoSubtitles: {
+        ...DEFAULT_CONFIG.videoSubtitles,
+        providerId: llmProvider.id,
+        requestQueueConfig: { rate: 10, capacity: 10, timeoutMs: 20_000 },
+        batchQueueConfig: { maxCharactersPerBatch: 1000, maxItemsPerBatch: 10 },
+      },
+    })
+    executeTranslateMock.mockResolvedValue("[1]\n所以今天\n[2]\n我想给你看")
+
+    const { setupSubtitlesTranslationHandlers } = await import("../subtitles-translation")
+    setupSubtitlesTranslationHandlers()
+    const handler = getRegisteredMessageHandler("enqueueSubtitlesTranslateRequest")
+    const cue = (text: string) =>
+      handler({
+        data: {
+          text,
+          langConfig: DEFAULT_CONFIG.language,
+          providerRef: { kind: "local" as const, config: llmProvider },
+          scheduleAt: Date.now(),
+          hash: `numbered-${text}`,
+          webTitle: "Video title",
+        },
+      })
+
+    await expect(Promise.all([cue("so today"), cue("I want to show you")])).resolves.toEqual([
+      "所以今天",
+      "我想给你看",
+    ])
+    expect(executeTranslateMock).toHaveBeenCalledTimes(1)
+    expect(executeTranslateMock.mock.calls[0]![0]).toBe("[1]\nso today\n[2]\nI want to show you")
   })
 
   it("keeps subtitle translations with different video context in separate batches", async () => {
@@ -580,7 +737,7 @@ describe("translation queue helpers", () => {
     expect(executeTranslateMock).toHaveBeenCalledTimes(2)
     expect(executeTranslateMock).toHaveBeenNthCalledWith(
       1,
-      "hello",
+      "[1]\nhello",
       DEFAULT_CONFIG.language,
       llmProvider,
       expect.any(Function),
@@ -594,7 +751,7 @@ describe("translation queue helpers", () => {
     )
     expect(executeTranslateMock).toHaveBeenNthCalledWith(
       2,
-      "hello",
+      "[1]\nhello",
       DEFAULT_CONFIG.language,
       llmProvider,
       expect.any(Function),
@@ -1612,7 +1769,7 @@ describe("translation queue helpers", () => {
     /** The terms the batch actually sent, as executeBatchTranslation merged them. */
     async function mergedTermsFor(dataList: ReturnType<typeof batchMember>[]) {
       const { executeBatchTranslation } = await import("../translation-queues")
-      await executeBatchTranslation(dataList, promptResolver)
+      await executeBatchTranslation(dataList, promptResolver, SEPARATED_BATCH_FORMAT)
       const options = executeTranslateMock.mock.calls.at(-1)![4] as {
         glossaryTerms?: readonly MatchedTerm[]
       }

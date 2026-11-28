@@ -52,8 +52,6 @@ popup:
         action: İki dilli moda geçmek için tıklayın
   hub:
     tooltip: Birden fazla çeviri modeliyle aynı anda metin çevirin
-  discord:
-    tooltip: Geliştiricilerle bağlantı kurmak ve yeni özelliklere erken erişim sağlamak için Discord'a katılın
   blog:
     notification: Read Frog'da yenilikler
   aiSmartContext: AI Akıllı Bağlam
@@ -153,6 +151,17 @@ options:
       title: WeChat grubu
       description: WeChat tartışma grubuna katılmak için QR kodu tarayın
       qrCodeAlt: WeChat QR kodu
+  usage:
+    title: Kullanım
+    pageDescription: Planın ve kalan yapay zekâ kotan.
+    notSignedIn: Giriş yapılmadı
+    guest: Misafir
+    manageSubscription: Aboneliği yönet
+    logInToView: Görmek için giriş yap
+    footer:
+      logIn: Giriş yap, her hafta ücretsiz yapay zekâ kotası kazan
+      upgrade: Yapay zekâ altyazılarının kilidini açmak ve daha fazla yerleşik AI kotası için Pro'ya geç
+      upgradeAction: Yükselt
   apiProviders:
     title: API Sağlayıcıları
     pageDescription: Read Frog'un yerleşik modellerini kullanın veya üçüncü taraf yapay zekâ servislerini bağlayın, ardından her özellik için hangisinin kullanılacağını seçin.
@@ -195,14 +204,14 @@ options:
         languageDetection: Dil algılama
         pdfTranslation: PDF çevirisi
     sponsorCta: Hızlı ve uygun maliyetli yapay zekâ al
-    sponsorCtaJalapenoCloud: GLM 5.3ʼte %50 indirim al
+    sponsorCtaJalapenoCloud: "Black Friday, DS4.1 Flash %50 indirimli"
     sponsorCtaIfapi: READFROG koduyla +%10 bakiye
     setApiKeyWarning:
       message: API anahtarınızı $1 sayfasında ayarlayın
     badges:
       featureCount: $1 özellik
       sponsor: Sponsor
-      sponsorJalapenoCloud: $$1 ücretsiz
+      sponsorJalapenoCloud: "1$$ + %60 ek"
       sponsorIfapi: Modeller -%90
     dialog:
       title: Yeni sağlayıcı ekle
@@ -292,7 +301,7 @@ options:
         anthropic: Güvenlik ve akıl yürütme mükemmelliğiyle tanınan Claude modelleri
         xai: Gerçek zamanlı veri erişimli Grok modelleri sunan Elon Musk'ın AI şirketi
         atlascloud: DeepSeek, Kimi, Qwen, Doubao ve GLM gibi yeni modellere OpenAI uyumlu birleşik erişim platformu
-        jalapenocloud: En iyi ekiplerin kullandığı kurumsal düzeyde yapay zekâ, şimdi sizin için!
+        jalapenocloud: "Flash her hafta sabit %50~30 indirimli"
         ifapi: GPT, Claude, Gemini ve daha fazlası, resmi fiyatın %10'undan başlayan fiyatlarla
         siliconflow: Çin ve uluslararası modeller için yüksek performanslı çıkarım platformu
         tensdaq: Yüksek maliyetli sabit fiyatlandırmayı ortadan kaldıran pazar odaklı fiyatlandırma ile devrimci açık artırma AI MaaS platformu
@@ -559,6 +568,9 @@ options:
     translationMode:
       title: Çeviri modu
       description: İki dilli ve yalnızca çeviri arasında geçiş yapar.
+    difficultWords:
+      title: Zor kelimeleri tara
+      description: Sayfada muhtemelen bilmediğiniz kelimeleri vurgular. Temizlemek için yeniden basın.
     selectionTranslation:
       title: Seçim çevirisi
       description: Seçtiğiniz metni çevirir.
@@ -595,9 +607,7 @@ options:
     pageDescription: Giriş kutularına yazdıklarınızı göndermeden önce çevirin.
     trigger:
       title: Tetikleme
-      enable:
-        title: Etkinleştir
-        description: Herhangi bir giriş alanında boşluk tuşuna hızlıca üç kez basarak yazdıklarınızı çevirin.
+      description: Herhangi bir giriş alanında boşluk tuşuna hızlıca üç kez basarak yazdıklarınızı çevirin.
       threshold:
         title: Tetikleme eşiği
         description: Basışlar arasında izin verilen süre, milisaniye cinsinden. Çeviri tetiklenmiyorsa artırın, yazarken kendiliğinden tetikleniyorsa azaltın.
@@ -616,9 +626,6 @@ options:
     title: Yüzen Buton
     pageDescription: Yüzen düğmenin hangi tarafta duracağını, tıklamanın ne yapacağını ve nerede gizleneceğini ayarlayın.
     demoImageAlt: Yüzen buton demosu
-    enable:
-      title: Yüzen butonu etkinleştir
-      description: Read Frog özelliklerine hızlı erişim için web sayfalarında yüzen butonu görüntüle
     display:
       title: Görünüm
       side:
@@ -638,6 +645,7 @@ options:
       translate: Sayfa çevirisini aç/kapat
     closeMenu:
       title: Yüzen butonu gizle
+    pageTranslationOff: "Sayfa Çevirisi sade modda kapalı"
     tooltips:
       togglePageTranslation: Sayfa çevirisini aç/kapat
       floatingButtonOptions: Kayan düğme seçenekleri
@@ -648,9 +656,6 @@ options:
     title: Seçim Araç Çubuğu
     pageDescription: Metin seçtiğinizde hangi eylemlerin görüneceğini ve araç çubuğunun nerede çıkacağını belirleyin.
     demoImageAlt: Seçim araç çubuğu demosu
-    enable:
-      title: Seçim araç çubuğunu etkinleştir
-      description: Web sayfalarında metin seçtiğinizde araç çubuğunu göstererek hızlı çeviri, seslendirme ve AI eylemleri sunar
     annotation:
       title: "Sözcük notları"
       enable:
@@ -662,13 +667,10 @@ options:
     actions:
       title: Eylemler
       translate:
-        title: Çeviri
         description: Araç çubuğunda çeviri düğmesini göster
       speak:
-        title: Sesli okuma
         description: Seçili metni sesli okuyan seslendirme düğmesini araç çubuğunda göster
       noteSuggestion:
-        title: Not önerileri
         description: Bir yapay zekâ sağlayıcısıyla seçim çevirisinden sonra Notebase'inize kaydedilecek kelimeler önerilir
         action: Eylem
         actionDescription: Öneriyi üreten eylem
@@ -1094,8 +1096,8 @@ options:
       pageDescription: Sizin için önemli olan sözcüklere sabit bir çeviri verin ve her listenin nerede geçerli olacağını seçin.
       untitled: Adsız terim sözlüğü
       noGlossaries: Henüz terim sözlüğü yok.
-      enable:
-        title: Etkinleştir
+      appliesTo:
+        title: Geçerli olduğu yerler
         description: Eşleşen terimleri LLM'ye gönderir, böylece onları istediğiniz gibi çevirir. Terim sözlüğü istemin içinde gönderilir, bu yüzden yalnızca LLM sağlayıcısı üzerinde çalışan özellikler için geçerlidir.
       library:
         title: Terim sözlükleriniz
@@ -1195,13 +1197,28 @@ options:
           confirm: Onayla
           cancel: İptal
           description: "$1 terimin tamamı kalıcı olarak silinecek. Bu işlem geri alınamaz."
+  difficultWords:
+    title: Zor kelimeler
+    pageDescription: Bir sayfada muhtemelen bilmediğiniz kelimeleri vurgular. Anlamına bakmak için birine tıklayın; bildiklerinizi işaretleyin ki bir daha vurgulanmasın.
+    enable:
+      title: Zor kelimeleri etkinleştir
+      description: Tarama butonunu açılır pencerede ve yüzen butonda gösterir, kısayolunu açar
+    usage:
+      title: Kullanım
+    lookupAction:
+      title: Bir kelimeye tıklayınca çalışır
+      description: Vurgulanan bir kelimeye tıkladığınızda açılan AI eylemi. Başkasını seçmediğiniz sürece yerleşik Sözlük.
+    levels:
+      title: Okuma seviyeniz
+      description: Her dilin kendi seviyesi vardır. O dilde bir sayfayı ilk kez taradığınızda sorulur ve bildiğiniz kelimeleri işaretledikçe ayarlanır.
+      empty: Henüz yok. Bir dilde bir sayfayı ilk kez taradığınızda o dildeki seviyeniz sorulur.
+      known: Muhtemelen en yaygın $1 kelimeyi biliyorsunuz
+      loginRequired: Her dildeki seviyenizi görmek ve değiştirmek için giriş yapın
+      loadError: Okuma seviyeleriniz yüklenemedi. Daha sonra tekrar deneyin.
   contextMenu:
     title: Bağlam Menüsü
     pageDescription: Tarayıcının sağ tık menüsündeki Read Frog seçeneklerini yönetin.
     demoImageAlt: Bağlam menüsü demosu
-    enable:
-      title: Bağlam menüsü çevirisini etkinleştir
-      description: Sayfa veya seçili metni hızlıca çevirmek için tarayıcı sağ tıklama menüsüne çeviri seçenekleri ekle
   translation:
     title: Sayfa Çevirisi
     pageDescription: Sayfaların nasıl çevrileceğini belirleyin — mod, kapsam, istemler ve istek limitleri.
@@ -1466,8 +1483,6 @@ options:
     aiQuota:
       title: Yapay zekâ altyazı kotası
       description: Yapay zeka konuşma tanıma ile her video için doğru altyazı üretir
-      launchBonusPromo: $1 tarihinden önce abone olun, 300 dakika ek deşifre hediyesi kazanın
-      loginRequired: Yapay zeka altyazı kotanızı görmek için giriş yapın
       upgradeRequired: Yapay zeka altyazıları için Pro veya Ultra aboneliği gerekir
       pools:
         subscription: Aylık kota
@@ -1573,6 +1588,53 @@ options:
           confirm: Onayla
           cancel: İptal
           description: Tüm önbelleğe alınmış AI bölümlendirme sonuçları silinecektir. AI bölümlendirme etkinleştirilmiş bir video oynatıldığında altyazılar yeniden işlenecektir.
+  simpleMode:
+    title: "Sade mod"
+    pageDescription: "Kapattığınız bir özellik hiç yüklenmemiş gibi olur: web sayfalarında görünmez ve kısayolları çalışmaz. Ayarları korunur; yeniden açtığınızda her şey eskisi gibi olur."
+    drawerDescription: "Kapattığınız özellikler hiçbir yerde görünmez. Ayarları korunur"
+    features:
+      customActions:
+        title: "Özel AI Eylemleri"
+        description: "Seçim araç çubuğundaki ve sağ tık menüsündeki AI eylemleri; yerleşik Sözlük ve Cümle Analizi dahil"
+      pageTranslation:
+        title: "Sayfa Çevirisi"
+        description: "Web sayfalarının tamamını çevirir"
+        hover:
+          title: "Üzerine gelme çevirisi"
+          description: "Bir paragrafın üzerine gelin veya uzun basın; yalnızca o paragraf çevrilir"
+      videoSubtitles:
+        title: "Video Altyazıları"
+        description: "Video oynatıcılara çevrilmiş altyazı düğmesi ekler"
+      inputTranslation:
+        title: "Giriş Çevirisi"
+        description: "Herhangi bir giriş alanında boşluk tuşuna hızlıca üç kez basarak yazdıklarınızı çevirin"
+      floatingButton:
+        title: "Yüzen Buton"
+        description: "Read Frog özelliklerine hızlı erişim için web sayfalarında yüzen butonu görüntüle"
+      selectionToolbar:
+        title: "Seçim Araç Çubuğu"
+        description: "Web sayfalarında metin seçtiğinizde araç çubuğunu göstererek hızlı çeviri, seslendirme ve AI eylemleri sunar"
+        annotation:
+          title: "Sözcük notları"
+          description: "Seçili sözcüğün veya ifadenin altını çizer ve anlamını satırların arasına yazar"
+        translate:
+          title: "Seçim çevirisi"
+          description: "Araç çubuğunda çeviri düğmesini göster"
+          noteSuggestion:
+            title: "Not önerileri"
+            description: "Bir yapay zekâ sağlayıcısıyla seçim çevirisinden sonra Notebase'inize kaydedilecek kelimeler önerilir"
+        speak:
+          title: "Sesli okuma"
+          description: "Seçili metni sesli okuyan seslendirme düğmesini araç çubuğunda göster"
+      contextMenu:
+        title: "Bağlam Menüsü"
+        description: "Tarayıcının sağ tık menüsündeki Read Frog seçenekleri"
+      translationHub:
+        title: "Çeviri Merkezi"
+        description: "Birden fazla çeviri modeliyle aynı anda metin çevirin"
+      glossary:
+        title: "Terim sözlüğü"
+        description: "Sizin için önemli sözcükleri belirlediğiniz şekilde çevirir"
   whatsNew:
     title: Yenilikler
     postType:
@@ -1618,6 +1680,7 @@ translation:
   sameLanguage: Kaynak ve hedef diller farklı olmalıdır
   autoModeSameLanguage: Algılanan dil '$1' hedef dille aynı
   extensionContextInvalidated: Uzantı güncellendi. Bu sayfayı yenileyip tekrar deneyin.
+  inputTranslationFailed: "Giriş çevirisi başarısız"
 pageDiagnosis:
   title: "Sayfa tanılaması"
   summary: "$1 çevrildi, $2 çevrilmedi"
@@ -1662,7 +1725,7 @@ hideMenu:
   untilReload: Sayfayı yenileyene kadar
   onSite: $1 sitesinde
   onAllSites: Tüm sitelerde
-  restoreHint: $1 bölümünden yeniden açabilirsiniz.
+  restoreHint: "$1 veya $2 bölümünden yeniden açabilirsiniz."
 action:
   copy: Kopyala
   copied: Kopyalandı
@@ -1813,6 +1876,9 @@ hostedAi:
     serviceUnavailable: Geçici olarak kullanılamıyor
     usedPercent: "Kota kullanımı: %$1"
     resetsAt: "$1'de sıfırlanır"
+  requestId:
+    label: "İstek kimliği:"
+    copy: "İstek kimliğini kopyala"
   errors:
     rateLimited: Çok fazla istek, lütfen daha sonra tekrar deneyin.
     guestRateLimited: Çok fazla misafir isteği. Lütfen daha sonra tekrar deneyin.
@@ -1865,3 +1931,39 @@ translationHub:
   translationFailed: Çeviri Başarısız
   translationFailedFallback: Çeviri başarısız
   retryTranslation: Çeviriyi yeniden dene
+difficultWords:
+  name: Zor kelimeler
+  scan: Kelimeleri tara
+  clear: Temizle
+  clearCount: $1 zor kelimeyi temizle
+  scanTooltip: Bu sayfada muhtemelen bilmediğiniz kelimeleri vurgular
+  clearTooltip: Bu sayfadaki vurguları kaldırır
+  translationOnlyUnavailable: Sayfada orijinal metin bırakmayan "Yalnızca çeviri" modunda kullanılamaz
+  unavailableHere: Read Frog bu sayfada açık değil
+  unavailableHereHint: Sayfa Read Frog yüklenmeden veya güncellenmeden önce açıldıysa yenileyip tekrar deneyin.
+  known: Biliyorum
+  knownDescription: Bilinen olarak işaretle. Ne bu sayfada ne de diğerlerinde bir daha vurgulanmaz.
+  markKnown: Bu kelimeyi biliyorum
+  markedKnown: Bilinen olarak işaretlendi
+  undo: Geri al
+  offline: Şu anda sunucuya ulaşılamıyor. Bağlantı geri geldiğinde tarama kendiliğinden devam eder.
+  empty: Bu sayfada taranacak paragraf yok
+  signInRequired: Zor kelimeleri taramak için giriş yapın
+  restricted: Zor kelimeler beta aşamasında ve henüz hesabınıza açık değil
+  dailyLimit: Bugünkü zor kelime sınırına ulaştınız. Sınır $1 itibarıyla sıfırlanır.
+  unsupportedBrowser: Bu tarayıcı sayfadaki kelimeleri vurgulayamıyor. Zor kelimeleri kullanmak için tarayıcınızı güncelleyin.
+  level:
+    title: $1 okuma seviyeniz nedir?
+    description: En yakın olanı seçin. Başta hangi kelimelerin vurgulanacağını bu belirler.
+    footer: Bildiğiniz kelimeleri işaretledikçe kendiliğinden ayarlanır.
+    later: Şimdi değil
+    unsure: Emin değilim
+    saveFailed: Seviyeniz kaydedilemedi. Daha sonra tekrar deneyin.
+    descriptions:
+      A1: Duyurular, afişler ve kataloglardaki gibi tanıdık adlar, kelimeler ve çok basit cümleler
+      A2: Çok kısa, basit metinler; ilan, menü ve tarifelerde aradığını bulmak; kısa kişisel mektuplar
+      B1: Çoğunlukla gündelik dille yazılmış, günlük yaşam ya da işle ilgili metinler; kişisel mektuplarda olay, duygu ve dilek anlatımları
+      B2: Yazarın belirli bir tutum aldığı güncel sorunlarla ilgili makale ve raporlar; çağdaş edebi düzyazı
+      C1: Üslup farklarını sezerek okunan uzun, karmaşık, olgusal ve edebi metinler; alanınız dışındaki uzmanlık makaleleri ve uzun teknik talimatlar
+      C2: Kullanım kılavuzları, uzmanlık makaleleri ve edebi eserler gibi yapısı ve dili karmaşık soyut metinler dahil, hemen her tür yazılı dil
+      unsure: A2 olarak sayılır. Düşükten başlamak daha iyidir; fazla vurgu bildiğiniz kelimeleri işaretleyerek çabucak düzelir, çok az vurguda ise tıklanacak bir şey kalmaz.

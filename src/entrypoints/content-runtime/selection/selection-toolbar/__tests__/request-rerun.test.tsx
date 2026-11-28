@@ -18,6 +18,7 @@ import { CONFIG_STORAGE_KEY, DEFAULT_CONFIG } from "@/utils/constants/config"
 import { GOOGLE_TRANSLATE_PROVIDER_ID } from "@/utils/constants/providers"
 import { getBuiltInDictionaryAction } from "@/utils/custom-actions"
 import { prepareTranslationText } from "@/utils/host/translate/text-preparation"
+import { onSelectionLookup } from "../../selection-lookups"
 import { buildContextSnapshot, createRangeSnapshot, normalizeSelectedText } from "../../utils"
 import { setSelectionStateAtom } from "../atoms"
 import { SelectionCustomActionProvider } from "../custom-action-button/provider"
@@ -278,18 +279,33 @@ vi.mock("@/components/ui/selection-popover/selection-toolbar-footer-content", ()
   SelectionToolbarFooterContent: ({
     children,
     paragraphsText,
-    onProviderChange,
     onRegenerate,
-    providers,
+    start,
     titleText,
-    value,
   }: {
     children?: ReactNode
     paragraphsText: string | null | undefined
-    onProviderChange: (id: string) => void
     onRegenerate: () => void
-    providers: Array<{ id: string; disabled?: boolean; kind?: string }>
+    start?: ReactNode
     titleText: string | null | undefined
+  }) => (
+    <div>
+      <span data-testid="footer-title">{titleText}</span>
+      <span data-testid="footer-paragraphs">{paragraphsText}</span>
+      {children}
+      <button type="button" aria-label="Regenerate" onClick={onRegenerate}>
+        Regenerate
+      </button>
+      {start}
+    </div>
+  ),
+  SelectionToolbarProviderSelect: ({
+    onChange,
+    providers,
+    value,
+  }: {
+    onChange: (id: string) => void
+    providers: Array<{ id: string; disabled?: boolean; kind?: string }>
     value: string
   }) => {
     // Skip the hosted system entries so the pick stays aligned with
@@ -300,26 +316,18 @@ vi.mock("@/components/ui/selection-popover/selection-toolbar-footer-content", ()
     )
 
     return (
-      <div>
-        <span data-testid="footer-title">{titleText}</span>
-        <span data-testid="footer-paragraphs">{paragraphsText}</span>
-        {children}
-        <button type="button" aria-label="Regenerate" onClick={onRegenerate}>
-          Regenerate
-        </button>
-        <button
-          type="button"
-          aria-label="Change provider"
-          disabled={!nextProvider}
-          onClick={() => {
-            if (nextProvider) {
-              onProviderChange(nextProvider.id)
-            }
-          }}
-        >
-          Change provider
-        </button>
-      </div>
+      <button
+        type="button"
+        aria-label="Change provider"
+        disabled={!nextProvider}
+        onClick={() => {
+          if (nextProvider) {
+            onChange(nextProvider.id)
+          }
+        }}
+      >
+        Change provider
+      </button>
     )
   },
 }))
@@ -1446,7 +1454,7 @@ describe("selection toolbar requests", () => {
     )
   })
 
-  it("opens selection translation from the shortcut when the toolbar UI is disabled", async () => {
+  it("opens selection translation from the shortcut while the toolbar is hidden on the site", async () => {
     translateTextCoreMock.mockResolvedValue("Toolbar disabled shortcut result")
     getOrCreateWebPageContextMock.mockResolvedValue(null)
 
@@ -1455,7 +1463,7 @@ describe("selection toolbar requests", () => {
     document.body.appendChild(paragraph)
 
     const config = cloneConfig(DEFAULT_CONFIG)
-    config.selectionToolbar.enabled = false
+    config.selectionToolbar.disabledSelectionToolbarPatterns = [window.location.hostname]
 
     const store = createStore()
     store.set(configAtom, config)
@@ -1497,27 +1505,33 @@ describe("selection toolbar requests", () => {
     expect(event.defaultPrevented).toBe(false)
   })
 
-  it("leaves the selection translation key to the page while Translate is turned off", async () => {
-    const paragraph = document.createElement("p")
-    paragraph.textContent = "Selected text inside a paragraph."
-    document.body.appendChild(paragraph)
+  it.each([
+    ["Translate", (config: Config) => (config.selectionToolbar.features.translate.enabled = false)],
+    ["the whole toolbar", (config: Config) => (config.selectionToolbar.enabled = false)],
+  ])(
+    "leaves the selection translation key to the page while %s is turned off",
+    async (_, turnOff) => {
+      const paragraph = document.createElement("p")
+      paragraph.textContent = "Selected text inside a paragraph."
+      document.body.appendChild(paragraph)
 
-    const config = cloneConfig(DEFAULT_CONFIG)
-    config.selectionToolbar.features.translate.enabled = false
-    const store = createStore()
-    store.set(configAtom, config)
-    setSelectionState(store, { text: "Selected text", range: createRangeFor(paragraph) })
-    renderWithProviders(<TranslateButton />, store)
+      const config = cloneConfig(DEFAULT_CONFIG)
+      turnOff(config)
+      const store = createStore()
+      store.set(configAtom, config)
+      setSelectionState(store, { text: "Selected text", range: createRangeFor(paragraph) })
+      renderWithProviders(<TranslateButton />, store)
 
-    let event!: KeyboardEvent
-    act(() => {
-      event = pressShortcut()
-    })
-    await act(() => Promise.resolve())
+      let event!: KeyboardEvent
+      act(() => {
+        event = pressShortcut()
+      })
+      await act(() => Promise.resolve())
 
-    expect(event.defaultPrevented).toBe(false)
-    expect(translateTextCoreMock).not.toHaveBeenCalled()
-  })
+      expect(event.defaultPrevented).toBe(false)
+      expect(translateTextCoreMock).not.toHaveBeenCalled()
+    },
+  )
 
   it("binds no key for an empty or invalid selection translation shortcut", () => {
     const paragraph = document.createElement("p")
@@ -1912,6 +1926,10 @@ describe("selection toolbar requests", () => {
     streamBackgroundStructuredObjectMock
       .mockReturnValueOnce(firstRun.promise)
       .mockReturnValueOnce(secondRun.promise)
+    const lookups: unknown[] = []
+    const stopListening = onSelectionLookup((session) => {
+      lookups.push(session)
+    })
 
     const paragraph = document.createElement("p")
     paragraph.textContent = "Selected text inside a paragraph."
@@ -1946,7 +1964,7 @@ describe("selection toolbar requests", () => {
       expect(streamBackgroundStructuredObjectMock).toHaveBeenCalledTimes(1)
     })
     expect(streamBackgroundStructuredObjectMock.mock.calls[0]?.[0]).toMatchObject({
-      providerId: "read-frog-ai:gpt-6-luna",
+      providerId: "read-frog-ai:claude-haiku-5-5",
       requestId: expect.stringMatching(/^[0-9a-f-]{36}$/i),
     })
 
@@ -1999,6 +2017,9 @@ describe("selection toolbar requests", () => {
     await waitFor(() => {
       expect(screen.getByText('{"summary":"Second result"}')).toBeInTheDocument()
     })
+    // Each run was a lookup, the pinned card's too.
+    expect(lookups).toHaveLength(2)
+    stopListening()
   })
 
   it("opens a custom action from the context menu with the captured selection session", async () => {

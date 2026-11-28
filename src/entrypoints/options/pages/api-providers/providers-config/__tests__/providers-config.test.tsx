@@ -369,8 +369,8 @@ describe("ProvidersConfig", () => {
       card.getAttribute("data-provider-id"),
     )
     expect(cardIds).toEqual([
-      "read-frog-ai:claude-haiku-5-5",
       DEFAULT_BUILT_IN_AI_PROVIDER_ID,
+      LUNA_PROVIDER_ID,
       "read-frog-ai:deepseek-v4.1-flash",
       SOL_PROVIDER_ID,
       "read-frog-ai:claude-sonnet-5-5",
@@ -403,7 +403,17 @@ describe("ProvidersConfig", () => {
       "GPT-6.2 Sol",
       "Claude Sonnet 5.5",
     ]) {
-      expect(screen.getByRole("switch", { name })).toBeInTheDocument()
+      expect(screen.getByText(name)).toBeInTheDocument()
+    }
+  })
+
+  it("gives Built-in AI cards no on/off switch, since a built-in model is always on", () => {
+    const { container } = renderProvidersConfig()
+
+    for (const card of container.querySelectorAll<HTMLElement>(
+      '[data-provider-id^="read-frog-ai:"]',
+    )) {
+      expect(within(card).queryByRole("switch")).not.toBeInTheDocument()
     }
   })
 
@@ -412,8 +422,11 @@ describe("ProvidersConfig", () => {
 
     const { container } = renderProvidersConfig()
 
-    expect(container.querySelector('[data-provider-id="read-frog-ai:gpt-5-mini"]')).not.toBeNull()
-    expect(screen.getByRole("switch", { name: "gpt-5-mini" })).toBeInTheDocument()
+    const card = container.querySelector<HTMLElement>(
+      '[data-provider-id="read-frog-ai:gpt-5-mini"]',
+    )
+    expect(card).not.toBeNull()
+    expect(within(card!).getByText("gpt-5-mini")).toBeInTheDocument()
   })
 
   it("offers only the default model before any list has been seen", () => {

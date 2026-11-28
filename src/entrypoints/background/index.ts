@@ -29,6 +29,7 @@ import {
   setUpDatabaseCleanup,
 } from "./db-cleanup"
 import { setupDiagnosticsHandlers } from "./diagnostics"
+import { setupDifficultWordsHandlers } from "./difficult-words"
 import { setupEdgeTTSMessageHandlers } from "./edge-tts"
 import { setupFeatureUsedEventHandlers } from "./feature-used-event"
 import { setupGlossaryMessageHandlers } from "./glossary"
@@ -172,6 +173,7 @@ export default defineBackground({
     setupNotebasePendingSaveProcessor(() => backgroundReady)
     setupLLMGenerateTextMessageHandlers()
     if (!import.meta.env.PROD && ACCOUNT_FEATURES_ENABLED) {
+      setupDifficultWordsHandlers()
       setupEdgeTTSMessageHandlers()
       setupTTSPlaybackMessageHandlers()
     }

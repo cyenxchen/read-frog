@@ -1,4 +1,4 @@
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useMemo, useRef } from "react"
 import { useLocation, useNavigate } from "react-router"
 import {
@@ -10,8 +10,11 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/base-ui/command"
-import { isHiddenForkSearchItem } from "@/utils/account-features/ui-policy" // fork:account-off
+import { isHiddenForkSearchItem } from "@/utils/account-features/ui-policy"
+import { configAtom } from "@/utils/atoms/config"
 import { i18n } from "@/utils/i18n"
+import { buildTurnOnLink } from "../pages/advanced/simple-mode/links"
+import { useIsDifficultWordsOpen } from "../pages/difficult-words/access"
 import { commandPaletteOpenAtom } from "./atoms"
 import { SEARCH_ITEMS } from "./search-items"
 import {
@@ -29,6 +32,7 @@ export function SettingsSearch() {
   const navigate = useNavigate()
   const { pathname, search, key: locationKey } = useLocation()
   const lastHandledLocationRef = useRef<string | null>(null)
+  const config = useAtomValue(configAtom)
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -41,10 +45,13 @@ export function SettingsSearch() {
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [setOpen])
 
+  const isDifficultWordsOpen = useIsDifficultWordsOpen()
+
   const groupedItems = useMemo(() => {
     const groups = new Map<(typeof SEARCH_ITEMS)[number]["pageKey"], typeof SEARCH_ITEMS>()
     for (const item of SEARCH_ITEMS) {
-      if (isHiddenForkSearchItem(item)) continue // fork:account-off
+      if (isHiddenForkSearchItem(item)) continue
+      if (item.gate === "difficultWords" && !isDifficultWordsOpen) continue
       const existing = groups.get(item.pageKey)
       if (existing) {
         existing.push(item)
@@ -53,7 +60,7 @@ export function SettingsSearch() {
       }
     }
     return groups
-  }, [])
+  }, [isDifficultWordsOpen])
 
   useEffect(() => {
     const sectionId = getSectionIdFromSearch(search)
@@ -72,6 +79,12 @@ export function SettingsSearch() {
 
   function handleSelect(item: (typeof SEARCH_ITEMS)[number]) {
     setOpen(false)
+
+    const turnOnLink = buildTurnOnLink(config, item.feature)
+    if (turnOnLink !== undefined) {
+      void navigate(turnOnLink)
+      return
+    }
 
     const targetSearch = buildSectionSearch(item.sectionId)
     if (pathname === item.route && search === targetSearch) {

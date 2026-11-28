@@ -4,6 +4,7 @@ import { remapHiddenProviderRefs } from "@/utils/account-features/remap-hidden-p
 import {
   BUILT_IN_ACTION_IDS,
   BUILT_IN_ACTION_KEYS,
+  BUILT_IN_DICTIONARY_ACTION_ID,
   isBuiltInActionId,
 } from "@/utils/constants/custom-action"
 import { FEATURE_KEYS, FEATURE_PROVIDER_DEFS } from "@/utils/constants/feature-providers"
@@ -125,6 +126,23 @@ const selectionToolbarSchema = z
   // are, so adding or deleting an action never has to update them itself.
   .transform((selectionToolbar) => normalizeSelectionToolbarLists(selectionToolbar))
 
+// Difficult words: marks the words on a page the reader probably does not
+// know. `.default()` lets a config stored before v132 parse in UI contexts
+// that load ahead of the background migration.
+const difficultWordsSchema = z
+  .object({
+    // Shows the ways to start marking: the popup, the floating button, the key.
+    enabled: z.boolean(),
+    // Missing means the default key (see getDifficultWordsShortcut); empty
+    // means the user cleared it. Optional rather than defaulted, for the
+    // reason given on the speak feature's key.
+    shortcut: shortcutSchema.optional(),
+    // The action a click on a marked word runs. One that no longer exists or
+    // is turned off falls back to the built-in Dictionary where it is used.
+    lookupActionId: z.string().nonempty().default(BUILT_IN_DICTIONARY_ACTION_ID),
+  })
+  .default(() => ({ enabled: true, lookupActionId: BUILT_IN_DICTIONARY_ACTION_ID }))
+
 // side content schema
 const sideContentSchema = z.object({
   width: z.number().min(MIN_SIDE_CONTENT_WIDTH),
@@ -136,6 +154,8 @@ const sideContentSchema = z.object({
 // and writing that over the user's settings.
 const translationHubSchema = z
   .object({
+    // Simple mode's translation hub switch (src/utils/features.ts).
+    enabled: z.boolean().default(true),
     shortcut: shortcutSchema,
     selectedProviderIds: storedProviderIdListSchema.nullable().default(null),
     sourceCode: storedLanguageTagSchema.or(z.literal("auto")).nullable().default(null),
@@ -145,6 +165,7 @@ const translationHubSchema = z
     promptId: z.string().min(1).nullable().default(null),
   })
   .default({
+    enabled: true,
     shortcut: DEFAULT_TRANSLATION_HUB_SHORTCUT_KEY,
     selectedProviderIds: null,
     sourceCode: null,
@@ -161,6 +182,17 @@ const betaExperienceSchema = z.object({
 const contextMenuSchema = z.object({
   enabled: z.boolean(),
 })
+
+// Simple mode's switch for the custom AI actions people trigger: the selection
+// toolbar's action buttons, the context menu's action items and the action
+// shortcuts (src/utils/features.ts). The actions themselves live in
+// `selectionToolbar.customActions`. `.default()` lets pre-v130 config parse in
+// UI contexts that load before the migration.
+const customActionsSchema = z
+  .object({
+    enabled: z.boolean(),
+  })
+  .default({ enabled: true })
 
 // input translation language selector: 'sourceCode', 'targetCode', or fixed language code
 const inputTranslationLangSchema = z.union([
@@ -213,6 +245,7 @@ export const configSchema = z
     sideContent: sideContentSchema,
     betaExperience: betaExperienceSchema,
     contextMenu: contextMenuSchema,
+    customActions: customActionsSchema,
     inputTranslation: inputTranslationSchema,
     videoSubtitles: videoSubtitlesSchema,
     siteControl: siteControlSchema,
@@ -221,6 +254,7 @@ export const configSchema = z
     translationHub: translationHubSchema,
     glossary: glossaryConfigSchema,
     builtInAi: builtInAiConfigSchema,
+    difficultWords: difficultWordsSchema,
   })
   .superRefine((data, ctx) => {
     for (const featureKey of FEATURE_KEYS) {

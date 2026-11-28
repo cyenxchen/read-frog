@@ -52,8 +52,6 @@ popup:
         action: Click to switch to bilingual
   hub:
     tooltip: Translate text with multiple models simultaneously
-  discord:
-    tooltip: Join Discord to connect with developers and get early access to new features
   blog:
     notification: What's new in Read Frog
   aiSmartContext: AI Smart Context
@@ -153,6 +151,17 @@ options:
       title: WeChat group
       description: Scan the QR code to join the WeChat discussion group
       qrCodeAlt: WeChat QR code
+  usage:
+    title: Usage
+    pageDescription: Your plan and how much AI quota you have left.
+    notSignedIn: Not signed in
+    guest: Guest
+    manageSubscription: Manage subscription
+    logInToView: Log in to view
+    footer:
+      logIn: Log in to get free AI quota every week
+      upgrade: Upgrade to Pro to unlock AI subtitles and more Built-in AI quota
+      upgradeAction: Upgrade
   apiProviders:
     title: API Providers
     pageDescription: Use Read Frog's built-in models or connect third-party AI services, then choose which one runs each feature.
@@ -195,14 +204,14 @@ options:
         languageDetection: Language detection
         pdfTranslation: PDF translation
     sponsorCta: Get fast, cost-effective AI
-    sponsorCtaJalapenoCloud: Get 50% Off GLM 5.3
+    sponsorCtaJalapenoCloud: "Black Friday, DS4.1 Flash 50% off"
     sponsorCtaIfapi: "+10% credit, use code READFROG"
     setApiKeyWarning:
       message: Please set your API key on the $1 page
     badges:
       featureCount: $1 features
       sponsor: Sponsor
-      sponsorJalapenoCloud: $$1 Free
+      sponsorJalapenoCloud: "1$$ + 60% gift"
       sponsorIfapi: 90% Off Models
     dialog:
       title: Add new provider
@@ -293,7 +302,7 @@ options:
         anthropic: Claude models known for safety and reasoning excellence
         xai: Elon Musk's AI company offering Grok models with real-time data access
         atlascloud: Unified OpenAI-compatible access to newer DeepSeek, Kimi, Qwen, Doubao, GLM, and other models
-        jalapenocloud: Enterprise-grade AI used by top teams — now made for you!
+        jalapenocloud: "50~30% off Flash, fixed every week"
         ifapi: GPT, Claude, Gemini and more, from 10% of list price
         siliconflow: High-performance inference platform for Chinese and international models
         tensdaq: Revolutionary bidding AI MaaS platform with market-driven pricing, eliminating high-cost fixed pricing
@@ -560,6 +569,9 @@ options:
     translationMode:
       title: Translation mode
       description: Switch between bilingual and translation only.
+    difficultWords:
+      title: Scan difficult words
+      description: Highlights the words on the page you probably don't know. Press it again to clear them.
     selectionTranslation:
       title: Selection translation
       description: Translate the text you selected.
@@ -596,9 +608,7 @@ options:
     pageDescription: Translate what you type in input boxes before you send it.
     trigger:
       title: Trigger
-      enable:
-        title: Enable
-        description: Press the space bar three times quickly in any input box to translate what you typed there.
+      description: Press the space bar three times quickly in any input box to translate what you typed there.
       threshold:
         title: Trigger threshold
         description: How long the presses may be apart, in milliseconds. Raise it if the trigger keeps missing, lower it if it fires while you are still typing.
@@ -617,9 +627,6 @@ options:
     title: Floating Button
     pageDescription: Set which side the floating button sits on, what a click does, and where it stays hidden.
     demoImageAlt: Floating button demo
-    enable:
-      title: Enable floating button
-      description: Display the floating button on web pages for quick access to Read Frog features
     display:
       title: Display
       side:
@@ -639,6 +646,7 @@ options:
       translate: Toggle page translation
     closeMenu:
       title: Hide floating button
+    pageTranslationOff: "Page Translation is turned off in Simple mode"
     tooltips:
       togglePageTranslation: Toggle page translation
       floatingButtonOptions: Floating button options
@@ -649,9 +657,6 @@ options:
     title: Selection Toolbar
     pageDescription: Set which actions appear when you select text, and where the toolbar shows up.
     demoImageAlt: Selection toolbar demo
-    enable:
-      title: Enable selection toolbar
-      description: Display the toolbar when selecting text on web pages for quick translation, speech, and AI actions
     annotation:
       title: "Word annotation"
       enable:
@@ -663,13 +668,10 @@ options:
     actions:
       title: Actions
       translate:
-        title: Translate
         description: Show the translate button in the toolbar
       speak:
-        title: Speak
         description: Show the speak button, which reads the selected text aloud
       noteSuggestion:
-        title: Note suggestions
         description: After selection translation with an AI provider, suggest words to save to your Notebase
         action: Action
         actionDescription: The action that produces the suggestion
@@ -1241,8 +1243,8 @@ options:
       pageDescription: Give the words that matter to you a fixed translation, and choose where each list applies.
       untitled: Untitled glossary
       noGlossaries: No glossaries yet.
-      enable:
-        title: Enable
+      appliesTo:
+        title: Applies to
         description: Send matching terms to the LLM so it renders them your way. The glossary travels in the prompt, so it only applies to features running on an LLM provider.
       library:
         title: Your glossaries
@@ -1342,13 +1344,28 @@ options:
           confirm: Confirm
           cancel: Cancel
           description: "All $1 terms will be permanently deleted. This action cannot be undone."
+  difficultWords:
+    title: Difficult words
+    pageDescription: Highlights the words on a page you probably don't know. Click one to look it up, and mark the ones you know so they aren't highlighted again.
+    enable:
+      title: Enable difficult words
+      description: Shows the scan button in the popup and on the floating button, and turns on its shortcut
+    usage:
+      title: Using it
+    lookupAction:
+      title: Clicking a word runs
+      description: The AI action that opens when you click a highlighted word. The built-in Dictionary unless you pick another.
+    levels:
+      title: Your reading level
+      description: Each language has its own. You're asked the first time you scan a page in it, and it adjusts as you mark the words you know.
+      empty: None yet. The first time you scan a page in a language, you'll be asked your level in it.
+      known: You likely know the $1 most common words
+      loginRequired: Sign in to see and change your level in each language
+      loadError: Couldn't load your reading levels. Try again later.
   contextMenu:
     title: Context Menu
     pageDescription: Control the Read Frog entries in the browser's right-click menu.
     demoImageAlt: Context menu demo
-    enable:
-      title: Enable context menu translate
-      description: Add translate options to the browser right-click menu for quick page and selection translation
   translation:
     title: Page Translation
     pageDescription: Control how pages get translated — mode, range, prompts, and request limits.
@@ -1613,8 +1630,6 @@ options:
     aiQuota:
       title: AI subtitles quota
       description: AI speech recognition gets you accurate subtitles for any video
-      launchBonusPromo: Subscribe before $1 for an extra 300 transcription minutes
-      loginRequired: Log in to view your AI subtitles quota
       upgradeRequired: AI subtitles require a Pro or Ultra subscription
       pools:
         subscription: Monthly quota
@@ -1720,6 +1735,53 @@ options:
           confirm: Confirm
           cancel: Cancel
           description: This will delete all cached AI segmentation results. The next time you play a video with AI segmentation enabled, it will re-process the subtitles.
+  simpleMode:
+    title: "Simple mode"
+    pageDescription: "A feature you turn off is as if it weren't installed: it no longer shows on web pages, and its shortcuts do nothing. Its settings are kept, so turning it back on brings everything back as it was."
+    drawerDescription: "Features you turn off disappear everywhere. Their settings are kept"
+    features:
+      customActions:
+        title: "Custom AI Actions"
+        description: "AI actions in the selection toolbar and the context menu, including the built-in Dictionary and Sentence Analysis"
+      pageTranslation:
+        title: "Page Translation"
+        description: "Translate whole web pages"
+        hover:
+          title: "Hover translation"
+          description: "Hover or long-press a paragraph to translate just that one"
+      videoSubtitles:
+        title: "Video Subtitles"
+        description: "Add a translated subtitles button to video players"
+      inputTranslation:
+        title: "Input Translation"
+        description: "Press the space bar three times quickly in any input box to translate what you typed there"
+      floatingButton:
+        title: "Floating Button"
+        description: "Display the floating button on web pages for quick access to Read Frog features"
+      selectionToolbar:
+        title: "Selection Toolbar"
+        description: "Display the toolbar when selecting text on web pages for quick translation, speech, and AI actions"
+        annotation:
+          title: "Word annotation"
+          description: "Underline the selected word or phrase and write its meaning between the lines"
+        translate:
+          title: "Selection translation"
+          description: "Show the translate button in the toolbar"
+          noteSuggestion:
+            title: "Note suggestions"
+            description: "After selection translation with an AI provider, suggest words to save to your Notebase"
+        speak:
+          title: "Speak"
+          description: "Show the speak button, which reads the selected text aloud"
+      contextMenu:
+        title: "Context Menu"
+        description: "Read Frog's items in the browser's right-click menu"
+      translationHub:
+        title: "Translation Hub"
+        description: "Translate text with multiple models simultaneously"
+      glossary:
+        title: "Glossary"
+        description: "Translate the words you care about the way you decided"
   whatsNew:
     title: What's New
     postType:
@@ -1765,6 +1827,7 @@ translation:
   sameLanguage: Source and target languages must be different
   autoModeSameLanguage: Detected language '$1' is the same as target language
   extensionContextInvalidated: The extension was updated. Refresh this page and try again.
+  inputTranslationFailed: "Input translation failed"
 pageDiagnosis:
   title: "Page diagnosis"
   summary: "$1 translated, $2 not translated"
@@ -1809,7 +1872,7 @@ hideMenu:
   untilReload: Until I reload this page
   onSite: On $1
   onAllSites: On all sites
-  restoreHint: Turn it back on in $1.
+  restoreHint: "Turn it back on in $1 or $2."
 action:
   copy: Copy
   copied: Copied
@@ -1960,6 +2023,9 @@ hostedAi:
     serviceUnavailable: Temporarily unavailable
     usedPercent: "Quota used: $1%"
     resetsAt: "Resets at $1"
+  requestId:
+    label: "Request ID:"
+    copy: "Copy request ID"
   errors:
     rateLimited: Too many requests, please try again later.
     guestRateLimited: Too many guest requests. Please try again later.
@@ -2012,3 +2078,39 @@ translationHub:
   translationFailed: Translation Failed
   translationFailedFallback: Translation failed
   retryTranslation: Retry translation
+difficultWords:
+  name: Difficult words
+  scan: Scan words
+  clear: Clear
+  clearCount: Clear $1 difficult words
+  scanTooltip: Highlight the words on this page you probably don't know
+  clearTooltip: Remove the highlights from this page
+  translationOnlyUnavailable: Not available in "Translation only" mode, which leaves no original text on the page
+  unavailableHere: Read Frog isn't on for this page
+  unavailableHereHint: If the page was open before Read Frog was installed or updated, refresh it and try again.
+  known: I know it
+  knownDescription: Mark as known. It won't be highlighted again, on this page or others.
+  markKnown: I know this word
+  markedKnown: Marked as known
+  undo: Undo
+  offline: Can't reach the server right now. Scanning resumes on its own once it's back.
+  empty: There are no paragraphs on this page to scan
+  signInRequired: Sign in to scan for difficult words
+  restricted: Difficult words is in beta and not open to your account yet
+  dailyLimit: You've reached today's difficult-word limit. It resets at $1.
+  unsupportedBrowser: This browser can't highlight words on a page. Update it to use difficult words.
+  level:
+    title: What's your $1 reading level?
+    description: Pick the closest one. It decides which words get highlighted at first.
+    footer: It adjusts as you mark words you know.
+    later: Not now
+    unsure: Not sure
+    saveFailed: Couldn't save your level. Try again later.
+    descriptions:
+      A1: Familiar names, words and very simple sentences, like those on notices, posters and catalogues
+      A2: Very short, simple texts; finding what you need in ads, menus and timetables; short personal letters
+      B1: Texts mostly in everyday language, about daily life or work; descriptions of events, feelings and wishes in personal letters
+      B2: Articles and reports on current issues in which the writer takes a clear stance; contemporary literary prose
+      C1: Long, complex factual and literary texts, telling styles apart; specialised articles and longer technical instructions outside your field
+      C2: Virtually every kind of written language, including abstract texts complex in structure and language, such as manuals, specialised articles and literary works
+      unsure: Counted as A2. Better to start low; too many highlights are quickly fixed by marking words you know, while too few leave nothing to click.

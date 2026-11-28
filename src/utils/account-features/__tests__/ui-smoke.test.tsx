@@ -8,18 +8,21 @@ import { afterEach, expect, it, vi } from "vitest"
 import { browser } from "#imports"
 import { AppSidebar } from "@/entrypoints/options/app-sidebar"
 import { FeaturesNav } from "@/entrypoints/options/app-sidebar/features-nav"
+import { SettingsNav } from "@/entrypoints/options/app-sidebar/settings-nav"
 import { WhatsNewFooter } from "@/entrypoints/options/app-sidebar/whats-new-footer"
 import { commandPaletteOpenAtom } from "@/entrypoints/options/command-palette/atoms"
 import { SEARCH_ITEMS } from "@/entrypoints/options/command-palette/search-items"
 import { SettingsSearch } from "@/entrypoints/options/command-palette/settings-search"
+import { SimpleModePage } from "@/entrypoints/options/pages/advanced/simple-mode"
 import { ApiProvidersPage } from "@/entrypoints/options/pages/api-providers"
 import { ActionEditorTabs } from "@/entrypoints/options/pages/custom-actions/action-config-form/editor-tabs"
 import { ConfigManagementSection } from "@/entrypoints/options/pages/preference/config"
 import { UserExperienceSection } from "@/entrypoints/options/pages/preference/user-experience"
 import { ActionsSection } from "@/entrypoints/options/pages/selection-toolbar/actions"
+import { ShortcutsPage } from "@/entrypoints/options/pages/shortcuts"
 import { VideoSubtitlesPage } from "@/entrypoints/options/pages/video-subtitles"
 import Popup from "@/entrypoints/popup/app"
-import BlogNotification from "@/entrypoints/popup/components/blog-notification"
+import { MoreMenu } from "@/entrypoints/popup/components/more-menu"
 import { configAtom } from "@/utils/atoms/config"
 import { getLastViewedBlogDate, saveLastViewedBlogDate } from "@/utils/blog"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
@@ -60,7 +63,6 @@ vi.mock("@/components/ui/base-ui/sidebar", () => {
   )
 })
 vi.mock("@/entrypoints/options/app-sidebar/collapse-toggle", () => ({ CollapseToggle: () => null }))
-vi.mock("@/entrypoints/options/app-sidebar/settings-nav", () => ({ SettingsNav: () => null }))
 vi.mock("@/entrypoints/options/pages/api-providers/providers-config/add-provider-dialog", () => ({
   default: () => null,
 }))
@@ -79,12 +81,6 @@ vi.mock("@/entrypoints/options/pages/api-providers/feature-providers", () => ({
 }))
 vi.mock("@/entrypoints/options/pages/api-providers/language-detection", () => ({
   LanguageDetectionConfig: () => null,
-}))
-vi.mock("@/entrypoints/options/pages/api-providers/built-in-ai-usage", () => ({
-  BuiltInAiUsageConfig: () => <p>Hosted usage</p>,
-}))
-vi.mock("@/entrypoints/options/pages/video-subtitles/ai-quota", () => ({
-  AiQuotaSection: () => <p>AI quota</p>,
 }))
 vi.mock("@/entrypoints/options/pages/video-subtitles/preference", () => ({
   PreferenceSection: () => <p>Subtitle preferences</p>,
@@ -123,12 +119,10 @@ vi.mock("@/components/ui/base-ui/command", () => {
     ].map((key) => [key, Box]),
   )
 })
-vi.mock("@iconify/react/dist/iconify.js", () => ({ Icon: () => null }))
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/entrypoints/popup/components/ai-smart-context", () => ({ AISmartContext: () => null }))
 vi.mock("@/entrypoints/popup/components/always-translate", () => ({ AlwaysTranslate: () => null }))
-vi.mock("@/entrypoints/popup/components/discord-button", () => ({ DiscordButton: () => null }))
 vi.mock("@/entrypoints/popup/components/language-options-selector", () => ({ default: () => null }))
-vi.mock("@/entrypoints/popup/components/more-menu", () => ({ MoreMenu: () => null }))
 vi.mock("@/entrypoints/popup/components/node-translation-hotkey-selector", () => ({
   default: () => null,
 }))
@@ -232,35 +226,90 @@ it("command palette hides Google Drive sync and offers manual config sync", () =
   expect(screen.queryByText("options.preference.config.googleDrive.title")).not.toBeInTheDocument()
   expect(screen.getByText("options.preference.config.manualSync.title")).toBeInTheDocument()
 })
-it("hides retired fork features from settings, sidebar and popup", () => {
-  mount(
-    <>
-      <UserExperienceSection />
-      <FeaturesNav />
-      <Popup />
-      <ActionsSection />
-    </>,
+it("hides retired fork features and server-backed pages from settings, sidebar and popup", () => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+  })
+  clients.push(client)
+  client.setQueryData(["difficultWordsAccess", true], "unknown")
+  client.setQueryData(["difficultWordsAccess", false], "unknown")
+  const store = createStore()
+  store.set(configAtom, {
+    ...structuredClone(DEFAULT_CONFIG),
+    providersConfig: [],
+    uiLanguage: "en",
+  })
+
+  render(
+    <QueryClientProvider client={client}>
+      <Provider store={store}>
+        <MemoryRouter initialEntries={["/page-translation"]}>
+          <SettingsNav />
+          <UserExperienceSection />
+          <FeaturesNav />
+          <Popup />
+          <ActionsSection />
+          <ShortcutsPage />
+          <SimpleModePage />
+        </MemoryRouter>
+      </Provider>
+    </QueryClientProvider>,
   )
 
   for (const title of [
+    "options.usage.title",
     "options.preference.userExperience.title",
     "options.tools.translationHub",
     "Translation Hub button",
     "options.tts.title",
-    "options.selectionToolbar.actions.speak.title",
+    "options.simpleMode.features.selectionToolbar.speak.title",
+    "options.simpleMode.features.selectionToolbar.translate.noteSuggestion.title",
+    "options.simpleMode.features.translationHub.title",
+    "options.difficultWords.title",
+    "difficultWords.scan",
+    "options.shortcuts.difficultWords.title",
   ]) {
     expect.soft(screen.queryByText(title)).not.toBeInTheDocument()
   }
-  expect(screen.getByText("options.selectionToolbar.actions.translate.title")).toBeVisible()
+  expect(screen.getByText("options.apiProviders.title")).toBeVisible()
+  expect(
+    screen.getAllByText("options.simpleMode.features.selectionToolbar.translate.title").length,
+  ).toBeGreaterThan(0)
 })
 it("hides retired fork features from settings search", () => {
-  mount(<SettingsSearch />)
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+  })
+  clients.push(client)
+  client.setQueryData(["difficultWordsAccess", true], "unknown")
+  const store = createStore()
+  store.set(configAtom, {
+    ...structuredClone(DEFAULT_CONFIG),
+    providersConfig: [],
+    uiLanguage: "en",
+  })
+  store.set(commandPaletteOpenAtom, true)
+
+  render(
+    <QueryClientProvider client={client}>
+      <Provider store={store}>
+        <MemoryRouter initialEntries={["/page-translation"]}>
+          <SettingsSearch />
+        </MemoryRouter>
+      </Provider>
+    </QueryClientProvider>,
+  )
 
   for (const title of [
+    "options.usage.title",
+    "options.apiProviders.builtInAiUsage.title",
+    "options.videoSubtitles.aiQuota.title",
     "options.preference.userExperience.beta.title",
     "options.preference.userExperience.analytics.title",
     "options.shortcuts.translationHub.title",
     "options.shortcuts.selectionSpeak.title",
+    "options.shortcuts.difficultWords.title",
+    "options.difficultWords.enable.title",
     "options.tts.speech.rate.title",
   ]) {
     expect.soft(screen.queryByText(title)).not.toBeInTheDocument()
@@ -269,14 +318,12 @@ it("hides retired fork features from settings search", () => {
 })
 it("API Providers hides hosted cards, editor and usage, keeping own-provider editing", () => {
   mount(<ApiProvidersPage />)
-  expect(screen.queryByText("Hosted usage")).not.toBeInTheDocument()
   expect(screen.queryByText("Hosted editor")).not.toBeInTheDocument()
   expect(screen.queryByText("options.apiProviders.builtInProvider")).not.toBeInTheDocument()
   expect(screen.getByText("Own provider editor")).toBeInTheDocument()
 })
 it("Video Subtitles keeps preferences without AI quota", () => {
   mount(<VideoSubtitlesPage />)
-  expect(screen.queryByText("AI quota")).not.toBeInTheDocument()
   expect(screen.getByText("Subtitle preferences")).toBeInTheDocument()
 })
 it("action editor keeps config without mounting Notebase, including retained connections", () => {
@@ -288,14 +335,18 @@ it("action editor keeps config without mounting Notebase, including retained con
 it("toolbar settings hide note suggestion", () => {
   mount(<ActionsSection />)
   expect(screen.queryByText("Note suggestion")).not.toBeInTheDocument()
-  expect(screen.getByText("options.selectionToolbar.actions.translate.title")).toBeInTheDocument()
+  expect(
+    screen.getByText("options.simpleMode.features.selectionToolbar.translate.title"),
+  ).toBeInTheDocument()
 })
-it("command palette hides all three account sections while keeping ordinary settings", () => {
+it("command palette hides all account sections while keeping ordinary settings", () => {
   mount(<SettingsSearch />)
   for (const sectionId of [
     CUSTOM_ACTION_NOTEBASE_SECTION_ID,
+    "built-in-ai-usage",
     "selection-toolbar-note-suggestion",
     "subtitles-ai-quota",
+    "difficult-words-enable",
   ]) {
     const item = SEARCH_ITEMS.find((entry) => entry.sectionId === sectionId)!
     expect(screen.queryByText(item.titleKey)).not.toBeInTheDocument()
@@ -309,25 +360,26 @@ it("sidebar hides the PDF external link", () => {
   expect(screen.queryByText("options.tools.pdfTranslation")).not.toBeInTheDocument()
 })
 it.each(["update", "announcement"])("ordinary %s posts still appear in both surfaces", (type) => {
-  const { container } = mount(
+  mount(
     <>
       <WhatsNewFooter />
-      <BlogNotification />
+      <MoreMenu />
     </>,
     type,
   )
   expect(screen.getByText("options.whatsNew.title")).toBeInTheDocument()
-  expect(container.querySelector(".animate-ping")).toBeInTheDocument()
+  expect(screen.getByText("popup.blog.notification")).toBeInTheDocument()
 })
 it("promotional posts disappear from the footer and popup notification", () => {
-  const { container } = mount(
+  mount(
     <>
       <WhatsNewFooter />
-      <BlogNotification />
+      <MoreMenu />
     </>,
     "promotion",
   )
-  expect(container).toBeEmptyDOMElement()
+  expect(screen.queryByText("options.whatsNew.title")).not.toBeInTheDocument()
+  expect(screen.queryByText("popup.blog.notification")).not.toBeInTheDocument()
 })
 
 it("marks a promotional post read without rendering its footer", async () => {

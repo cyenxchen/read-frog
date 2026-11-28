@@ -13,6 +13,8 @@ export const HIDDEN_ACCOUNT_SECTION_IDS: ReadonlySet<string> = new Set(
     : [
         CUSTOM_ACTION_NOTEBASE_SECTION_ID,
         "beta-experience",
+        "built-in-ai-usage",
+        "difficult-words-shortcut",
         "google-drive-sync",
         "selection-speak-shortcut",
         "selection-toolbar-note-suggestion",
@@ -24,7 +26,8 @@ export const HIDDEN_ACCOUNT_SECTION_IDS: ReadonlySet<string> = new Set(
 export function isHiddenForkSearchItem({ sectionId, route }: { sectionId: string; route: string }) {
   return (
     HIDDEN_ACCOUNT_SECTION_IDS.has(sectionId) ||
-    (!ACCOUNT_FEATURES_ENABLED && route === "/tts") ||
+    (!ACCOUNT_FEATURES_ENABLED &&
+      (route === "/tts" || route === "/usage" || route === "/difficult-words")) ||
     (!SHOW_ANALYTICS_PREFERENCE && sectionId === "analytics")
   )
 }

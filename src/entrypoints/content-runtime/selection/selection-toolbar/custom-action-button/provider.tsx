@@ -11,15 +11,18 @@ import { SaveToNotebaseDialogHost } from "@/components/custom-action/save-to-not
 import { toastManager } from "@/components/ui/base-ui/toast"
 import { SelectionPopover } from "@/components/ui/selection-popover"
 import { createSelectionToolbarPrecheckError } from "@/components/ui/selection-popover/inline-error"
+import { ReviewDueTab } from "@/components/ui/selection-popover/review-due-tab"
 import { ANALYTICS_FEATURE, ANALYTICS_SURFACE } from "@/types/analytics"
 import { createFeatureUsageContext, trackFeatureUsed } from "@/utils/analytics"
 import { classifyResolvedProvider, UNKNOWN_FEATURE_PROVIDER } from "@/utils/analytics-provider"
-import { configFieldsAtomMap } from "@/utils/atoms/config"
-import { findSelectionToolbarAction, getSelectionToolbarActions } from "@/utils/custom-actions"
+import { configAtom, configFieldsAtomMap } from "@/utils/atoms/config"
+import { findSelectionToolbarAction } from "@/utils/custom-actions"
 import { onMessage } from "@/utils/message"
 import { getWebPageNoteOrigin } from "@/utils/note-origin"
 import { resolveProviderRefForCapability } from "@/utils/providers/provider-registry"
 import { ShadowWrapperContext } from "@/utils/react-shadow-host/create-shadow-host"
+import { getSelectionToolbarItems } from "@/utils/selection-toolbar-items"
+import { notifySelectionLookup } from "../../selection-lookups"
 import { normalizeSelectedText } from "../../utils"
 import {
   contextAtom,
@@ -68,7 +71,8 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
   const selectionSession = useAtomValue(selectionSessionAtom)
   const selection = useAtomValue(selectionAtom)
   const context = useAtomValue(contextAtom)
-  const selectionToolbarConfig = useAtomValue(configFieldsAtomMap.selectionToolbar)
+  const config = useAtomValue(configAtom)
+  const selectionToolbarConfig = config.selectionToolbar
   const providersConfig = useAtomValue(configFieldsAtomMap.providersConfig)
   const [customActionRequest, setCustomActionRequest] = useAtom(customActionRequestAtom)
   const setIsSelectionToolbarOpen = useSetAtom(isSelectionToolbarOpenAtom)
@@ -94,9 +98,9 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
       const selectionText = session?.selectionSnapshot.text ?? ""
       const cleanSelection = normalizeSelectedText(selectionText)
 
-      if (mode === "open") {
-        sessionKeyRef.current += 1
-      }
+      if (mode === "open") sessionKeyRef.current += 1
+      // A pinned card run on a new selection looks that one up too.
+      if (pendingRequest) notifySelectionLookup(session)
 
       setCustomActionRequest((previous) =>
         pendingRequest
@@ -227,15 +231,16 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
     [openActionRequest, providersConfig, resolveContextMenuOpenRequest, selectionToolbarConfig],
   )
 
-  // An action switched off has no key, whatever it was given.
+  // An action's key goes with its toolbar item: an action switched off has none, whatever it was
+  // given, and neither has any while simple mode has custom actions or the toolbar switched off.
   const actionShortcuts = useMemo(
     () =>
       Object.fromEntries(
-        getSelectionToolbarActions(selectionToolbarConfig)
-          .filter((action) => action.enabled !== false)
-          .map((action) => [action.id, action.shortcut]),
+        getSelectionToolbarItems(config).flatMap((item) =>
+          item.kind === "action" && item.shown ? [[item.id, item.action.shortcut]] : [],
+        ),
       ),
-    [selectionToolbarConfig],
+    [config],
   )
 
   useSelectionShortcuts(actionShortcuts, (actionId, session) => {
@@ -281,7 +286,14 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
           key={customActionRequest?.sessionKey ?? 0}
           container={shadowWrapper ?? document.body}
         >
-          <CustomActionPanel />
+          <CustomActionPanel.Root>
+            <CustomActionPanel.Header />
+            <CustomActionPanel.Body />
+            <ReviewDueTab source="extension_custom_ai_action" />
+            <CustomActionPanel.Footer>
+              <CustomActionPanel.ProviderSelect />
+            </CustomActionPanel.Footer>
+          </CustomActionPanel.Root>
         </SelectionPopover.Content>
       </SelectionPopover.Root>
       <SaveToNotebaseDialogHost />

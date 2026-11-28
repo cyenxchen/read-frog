@@ -52,8 +52,6 @@ popup:
         action: 点击切换为双语对照
   hub:
     tooltip: 一次性调用多个翻译模型翻译文本
-  discord:
-    tooltip: 加入 Discord 与开发者交流，抢先体验新功能
   blog:
     notification: 陪读蛙更新动态
   aiSmartContext: AI 智能上下文
@@ -153,6 +151,17 @@ options:
       title: 微信群
       description: 扫描二维码进入微信讨论群
       qrCodeAlt: 微信二维码
+  usage:
+    title: 用量
+    pageDescription: 查看你的会员和 AI 额度。
+    notSignedIn: 未登录
+    guest: 访客
+    manageSubscription: 管理订阅
+    logInToView: 登录后查看
+    footer:
+      logIn: 登录后每周送免费 AI 额度
+      upgrade: 升级 Pro 解锁 AI 字幕和更多内置 AI 额度
+      upgradeAction: 升级会员
   apiProviders:
     title: API 提供商
     pageDescription: 使用 Read Frog 内置模型或接入第三方 AI 服务，并为每项功能指定使用哪一个。
@@ -195,14 +204,14 @@ options:
         languageDetection: 语言检测
         pdfTranslation: PDF 翻译
     sponsorCta: 获取高速性价比 AI
-    sponsorCtaJalapenoCloud: 获取 GLM 5.3 五折优惠
+    sponsorCtaJalapenoCloud: "黑色星期五，DS4.1 Flash 五折"
     sponsorCtaIfapi: 首充加赠 10%，优惠码 READFROG
     setApiKeyWarning:
       message: 请在 $1 页面设置 API Key
     badges:
       featureCount: $1 个功能
       sponsor: 赞助
-      sponsorJalapenoCloud: $$1 免费额度
+      sponsorJalapenoCloud: "1$$ + 赠金 30%起"
       sponsorIfapi: 1 折模型
     dialog:
       title: 添加新提供商
@@ -293,7 +302,7 @@ options:
         anthropic: 以安全性和推理能力著称的 Claude 模型
         xai: 马斯克的 AI 公司，提供具有实时数据访问能力的 Grok 模型
         atlascloud: 统一的 OpenAI 兼容模型平台，提供 DeepSeek、Kimi、Qwen、豆包、GLM 等较新模型
-        jalapenocloud: 顶尖团队都在用的企业级 AI，现在为你而来！
+        jalapenocloud: "每周固定 Flash 打折"
         ifapi: GPT、Claude、Gemini 等主流模型，低至官方价 1 折，国内专线直连
         siliconflow: 面向中国和国际模型的高性能推理平台
         tensdaq: 革命性竞价 AI MaaS 平台，价格由市场供需决定，告别高成本固定定价
@@ -560,6 +569,9 @@ options:
     translationMode:
       title: 翻译模式
       description: 在双语对照和仅显示翻译之间切换。
+    difficultWords:
+      title: 扫描难词
+      description: 标出当前页面上你可能不认识的词，再按一次清除
     selectionTranslation:
       title: 划词翻译
       description: 翻译选中的文本。
@@ -596,9 +608,7 @@ options:
     pageDescription: 在发送之前，把你在输入框里写的内容翻译好。
     trigger:
       title: 触发方式
-      enable:
-        title: 启用
-        description: 在任意输入框中快速连按 3 次空格键，即可翻译你输入的内容。
+      description: 在任意输入框中快速连按 3 次空格键，即可翻译你输入的内容。
       threshold:
         title: 触发阈值
         description: 相邻两次按键之间最多可以间隔多少毫秒。经常触发不了就调大，打字时误触发就调小。
@@ -617,9 +627,6 @@ options:
     title: 悬浮按钮
     pageDescription: 设置悬浮按钮停在哪一侧、点击后做什么，以及在哪些网站不显示。
     demoImageAlt: 悬浮按钮演示
-    enable:
-      title: 启用悬浮按钮
-      description: 在网页上显示悬浮按钮，快速访问陪读蛙功能
     display:
       title: 显示
       side:
@@ -639,6 +646,7 @@ options:
       translate: 切换页面翻译
     closeMenu:
       title: 隐藏悬浮按钮
+    pageTranslationOff: "网页翻译已在简洁模式中关闭"
     tooltips:
       togglePageTranslation: 切换页面翻译
       floatingButtonOptions: 悬浮按钮选项
@@ -649,9 +657,6 @@ options:
     title: 选择工具栏
     pageDescription: 设置选中文本时出现哪些操作，以及工具栏在哪些网站显示。
     demoImageAlt: 选择工具栏演示
-    enable:
-      title: 启用选择工具栏
-      description: 在网页上选择文本时显示工具栏，快速翻译、朗读和使用 AI 指令
     annotation:
       title: "划词标注"
       enable:
@@ -663,13 +668,10 @@ options:
     actions:
       title: 操作
       translate:
-        title: 翻译
         description: 在工具栏中显示翻译按钮
       speak:
-        title: 朗读
         description: 在工具栏中显示朗读按钮，用于朗读选中的文本
       noteSuggestion:
-        title: 猜你想存
         description: 使用 AI 提供商进行划词翻译后，推荐可存入笔记库的词条
         action: 指令
         actionDescription: 用于生成「猜你想存」的指令
@@ -1104,8 +1106,8 @@ options:
       pageDescription: 给你在意的词固定一个译法，并选择每份术语库在哪些网站生效。
       untitled: 未命名术语库
       noGlossaries: 还没有术语库。
-      enable:
-        title: 启用
+      appliesTo:
+        title: 生效范围
         description: 把命中的术语一并发给 LLM，让它按你的写法翻译。术语库是随提示词一起发送的，所以只对运行在 LLM 提供商上的功能生效。
       library:
         title: 你的术语库
@@ -1205,13 +1207,28 @@ options:
           confirm: 确认
           cancel: 取消
           description: "全部 $1 条术语将被永久删除。此操作无法撤销。"
+  difficultWords:
+    title: 难词扫描
+    pageDescription: 在网页上标出你可能不认识的词。点一下看释义；认识的词点「认识」，以后就不再标。
+    enable:
+      title: 启用难词扫描
+      description: 在 popup 和悬浮球上显示「扫描难词」，并启用它的快捷键
+    usage:
+      title: 使用
+    lookupAction:
+      title: 点开难词时运行
+      description: 点开标出的词时打开的 AI 指令，默认是内置的词典
+    levels:
+      title: 我的阅读水平
+      description: 每种语言分开算。第一次扫描某种语言的页面时会问你，之后根据你标「认识」的词自动调整。
+      empty: 还没有。第一次扫描某种语言的页面时，会先问你在这种语言里的水平。
+      known: 大约认识最常用的 $1 个词
+      loginRequired: 登录后可以查看和修改各语言的水平
+      loadError: 没能读取你的阅读水平，请稍后再试
   contextMenu:
     title: 右键菜单
     pageDescription: 控制浏览器右键菜单里的 Read Frog 选项。
     demoImageAlt: 右键菜单演示
-    enable:
-      title: 启用右键翻译
-      description: 在浏览器右键菜单中添加翻译选项，快速翻译页面或所选文本
   translation:
     title: 网页翻译
     pageDescription: 控制页面翻译的方式：模式、范围、提示词和请求限制。
@@ -1476,8 +1493,6 @@ options:
     aiQuota:
       title: AI 字幕额度
       description: AI 利用语音转文字技术获取任何视频的准确字幕
-      launchBonusPromo: $1 之前购买会员额外赠送 300 分钟转录额度
-      loginRequired: 登录后查看你的 AI 字幕额度
       upgradeRequired: AI 字幕需要 Pro 或 Ultra 订阅
       pools:
         subscription: 每月额度
@@ -1583,6 +1598,53 @@ options:
           confirm: 确认
           cancel: 取消
           description: 这将删除所有已缓存的 AI 断句结果。下次播放启用 AI 断句的视频时，将重新处理字幕。
+  simpleMode:
+    title: "简洁模式"
+    pageDescription: "关掉的功能就像没装：网页上不出现，快捷键也不响应。它的设置会保留，重新打开后一切照旧。"
+    drawerDescription: "关掉的功能不会出现在任何地方，设置会保留"
+    features:
+      customActions:
+        title: "自定义 AI 指令"
+        description: "选择工具栏和右键菜单里的 AI 指令，包括内置的词典、长难句分析"
+      pageTranslation:
+        title: "网页翻译"
+        description: "翻译整个网页"
+        hover:
+          title: "悬停翻译"
+          description: "悬停或长按段落，只翻译这一段"
+      videoSubtitles:
+        title: "视频字幕"
+        description: "在视频播放器里加上翻译字幕按钮"
+      inputTranslation:
+        title: "输入翻译"
+        description: "在任意输入框中快速连按 3 次空格键，即可翻译你输入的内容"
+      floatingButton:
+        title: "悬浮按钮"
+        description: "在网页上显示悬浮按钮，快速访问陪读蛙功能"
+      selectionToolbar:
+        title: "选择工具栏"
+        description: "在网页上选择文本时显示工具栏，快速翻译、朗读和使用 AI 指令"
+        annotation:
+          title: "划词标注"
+          description: "给选中的词或短语加下划线，并在行间写出释义"
+        translate:
+          title: "划词翻译"
+          description: "在工具栏中显示翻译按钮"
+          noteSuggestion:
+            title: "猜你想存"
+            description: "使用 AI 提供商进行划词翻译后，推荐可存入笔记库的词条"
+        speak:
+          title: "朗读"
+          description: "在工具栏中显示朗读按钮，用于朗读选中的文本"
+      contextMenu:
+        title: "右键菜单"
+        description: "浏览器右键菜单里的陪读蛙选项"
+      translationHub:
+        title: "翻译中心"
+        description: "一次性调用多个翻译模型翻译文本"
+      glossary:
+        title: "术语库"
+        description: "让你在意的词按你定的译法翻译"
   whatsNew:
     title: 最近更新
     postType:
@@ -1628,6 +1690,7 @@ translation:
   sameLanguage: 源语言和目标语言必须不同
   autoModeSameLanguage: 检测到的语言 '$1' 与目标语言相同
   extensionContextInvalidated: 扩展已更新，请刷新此页面后重试。
+  inputTranslationFailed: "输入翻译失败"
 pageDiagnosis:
   title: "页面诊断"
   summary: "已翻译 $1 段，未翻译 $2 段"
@@ -1672,7 +1735,7 @@ hideMenu:
   untilReload: 直到刷新页面
   onSite: 在 $1 上
   onAllSites: 在所有网站上
-  restoreHint: 可在「$1」中重新开启。
+  restoreHint: "可在「$1」或「$2」中重新开启。"
 action:
   copy: 复制
   copied: 已复制
@@ -1823,6 +1886,9 @@ hostedAi:
     serviceUnavailable: 暂时不可用
     usedPercent: "额度已使用 $1%"
     resetsAt: "$1 重置"
+  requestId:
+    label: "请求 ID："
+    copy: "复制请求 ID"
   errors:
     rateLimited: 请求过于频繁，请稍后再试
     guestRateLimited: 游客请求过于频繁，请稍后再试
@@ -1875,3 +1941,39 @@ translationHub:
   translationFailed: 翻译失败
   translationFailedFallback: 翻译失败
   retryTranslation: 重试翻译
+difficultWords:
+  name: 难词扫描
+  scan: 扫描难词
+  clear: 清除难词
+  clearCount: 清除难词 $1
+  scanTooltip: 标出这页上你可能不认识的词
+  clearTooltip: 清除这页上标出的难词
+  translationOnlyUnavailable: 「仅显示翻译」模式下页面上没有原文，无法扫描难词
+  unavailableHere: 陪读蛙在这个页面上没有启用
+  unavailableHereHint: 如果这个页面是在安装或更新陪读蛙之前打开的，请刷新后再试。
+  known: 认识
+  knownDescription: 标为认识：这页和其他页都不再标出这个词
+  markKnown: 认识这个词
+  markedKnown: 已记为认识
+  undo: 撤销
+  offline: 暂时连不上服务器，恢复后自动继续
+  empty: 这页没有可以扫描的段落
+  signInRequired: 登录后才能扫描难词
+  restricted: 难词扫描还在内测，暂未对你的账号开放
+  dailyLimit: 今天的难词扫描额度用完了，$1 恢复
+  unsupportedBrowser: 当前浏览器无法在页面上标出单词，请更新浏览器后再使用难词扫描
+  level:
+    title: 你的$1阅读水平大概是？
+    description: 选最接近的一项，用来决定一开始标出哪些词
+    footer: 之后会根据你的点击自动调整
+    later: 以后再说
+    unsure: 不确定
+    saveFailed: 没能保存水平，请稍后再试
+    descriptions:
+      A1: 熟悉的名字、单词和很简单的句子，比如告示、海报、目录上的
+      A2: 很短、很简单的文字；能在广告、菜单、时刻表里找到要的信息；简短的私人信件
+      B1: 以常用词为主的文字，比如日常生活和工作相关的；私人信件里对事情、感受、愿望的描述
+      B2: 讨论当代问题的文章和报道，作者有明确的立场和观点；当代文学散文
+      C1: 较长、较复杂的事实性和文学性文字，能体会风格的差别；不是自己领域的专业文章和较长的技术说明
+      C2: 几乎所有形式的书面语，包括抽象的、结构和语言都很复杂的文字，比如说明书、专业文章、文学作品
+      unsure: 按 A2 算。宁可偏低：标多了，点「认识」很快调上去；标少了，没有东西可点，很难发现

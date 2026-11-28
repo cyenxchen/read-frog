@@ -52,8 +52,6 @@ popup:
         action: Haz clic para cambiar a bilingüe
   hub:
     tooltip: Traduce texto con varios modelos al mismo tiempo
-  discord:
-    tooltip: Únete a Discord para conectar con desarrolladores y obtener acceso anticipado a nuevas funciones
   blog:
     notification: Novedades de Read Frog
   aiSmartContext: Contexto inteligente de IA
@@ -153,6 +151,17 @@ options:
       title: Grupo de WeChat
       description: Escanea el código QR para unirte al grupo de discusión de WeChat
       qrCodeAlt: Código QR de WeChat
+  usage:
+    title: Uso
+    pageDescription: Tu plan y cuánta cuota de IA te queda.
+    notSignedIn: Sin iniciar sesión
+    guest: Invitado
+    manageSubscription: Gestionar suscripción
+    logInToView: Inicia sesión para verlo
+    footer:
+      logIn: Inicia sesión y recibe cuota de IA gratis cada semana
+      upgrade: Pásate a Pro para desbloquear los subtítulos con IA y más cuota de IA integrada
+      upgradeAction: Mejorar plan
   apiProviders:
     title: Proveedores de API
     pageDescription: Usa los modelos integrados de Read Frog o conecta servicios de IA de terceros y elige cuál se encarga de cada función.
@@ -195,14 +204,14 @@ options:
         languageDetection: Detección de idioma
         pdfTranslation: Traducción de PDF
     sponsorCta: Obtén IA rápida y rentable
-    sponsorCtaJalapenoCloud: Obtén un 50 % de descuento en GLM 5.3
+    sponsorCtaJalapenoCloud: "Black Friday, DS4.1 Flash al 50 %"
     sponsorCtaIfapi: "+10 % de saldo con el código READFROG"
     setApiKeyWarning:
       message: Configura tu clave de API en la página $1
     badges:
       featureCount: $1 funciones
       sponsor: Patrocinador
-      sponsorJalapenoCloud: $$1 gratis
+      sponsorJalapenoCloud: "1$$ + 60% más"
       sponsorIfapi: Modelos -90 %
     dialog:
       title: Añadir nuevo proveedor
@@ -293,7 +302,7 @@ options:
         anthropic: Modelos Claude conocidos por su seguridad y excelente razonamiento
         xai: Empresa de AI de Elon Musk que ofrece modelos Grok con acceso a datos en tiempo real
         atlascloud: Plataforma unificada compatible con OpenAI para modelos recientes como DeepSeek, Kimi, Qwen, Doubao y GLM
-        jalapenocloud: IA de nivel empresarial que utilizan los mejores equipos, ¡ahora para ti!
+        jalapenocloud: "Flash con 50~30 % de descuento fijo cada semana"
         ifapi: GPT, Claude, Gemini y más, desde el 10 % del precio oficial
         siliconflow: Plataforma de inferencia de alto rendimiento para modelos chinos e internacionales
         tensdaq: Plataforma revolucionaria de pujas AI MaaS con precios impulsados por el mercado, que elimina los altos precios fijos
@@ -560,6 +569,9 @@ options:
     translationMode:
       title: Modo de traducción
       description: Alterna entre bilingüe y solo traducción.
+    difficultWords:
+      title: Buscar palabras difíciles
+      description: Resalta las palabras de la página que probablemente no conoces. Púlsalo otra vez para borrarlas.
     selectionTranslation:
       title: Traducción de la selección
       description: Traduce el texto que seleccionaste.
@@ -596,9 +608,7 @@ options:
     pageDescription: Traduce lo que escribes en los campos de texto antes de enviarlo.
     trigger:
       title: Activación
-      enable:
-        title: Activar
-        description: Pulsa la barra espaciadora tres veces seguidas en cualquier campo de entrada para traducir lo que has escrito.
+      description: Pulsa la barra espaciadora tres veces seguidas en cualquier campo de entrada para traducir lo que has escrito.
       threshold:
         title: Umbral de activación
         description: Cuánto pueden separarse las pulsaciones, en milisegundos. Auméntalo si la traducción no llega a activarse; redúcelo si salta mientras escribes.
@@ -617,9 +627,6 @@ options:
     title: Botón flotante
     pageDescription: Elige en qué lado se coloca el botón flotante, qué hace al pulsarlo y dónde permanece oculto.
     demoImageAlt: Demostración del botón flotante
-    enable:
-      title: Activar botón flotante
-      description: Muestra el botón flotante en páginas web para acceder rápidamente a las funciones de Read Frog
     display:
       title: Visualización
       side:
@@ -639,6 +646,7 @@ options:
       translate: Alternar traducción de página
     closeMenu:
       title: Ocultar botón flotante
+    pageTranslationOff: "La traducción de páginas está desactivada en el modo simple"
     tooltips:
       togglePageTranslation: Alternar traducción de página
       floatingButtonOptions: Opciones del botón flotante
@@ -649,9 +657,6 @@ options:
     title: Barra de selección
     pageDescription: Define qué acciones aparecen al seleccionar texto y dónde se muestra la barra.
     demoImageAlt: Demostración de la barra de selección
-    enable:
-      title: Activar barra de selección
-      description: Muestra la barra de herramientas al seleccionar texto en páginas web para traducción rápida, voz y acciones AI
     annotation:
       title: "Anotación de palabras"
       enable:
@@ -663,13 +668,10 @@ options:
     actions:
       title: Acciones
       translate:
-        title: Traducir
         description: Muestra el botón de traducción en la barra de herramientas
       speak:
-        title: Leer en voz alta
         description: Muestra el botón de voz, que lee en voz alta el texto seleccionado
       noteSuggestion:
-        title: Sugerencias de notas
         description: Después de traducir una selección con un proveedor de IA, sugerir palabras para guardar en tu Notebase
         action: Acción
         actionDescription: La acción que genera la sugerencia
@@ -1099,8 +1101,8 @@ options:
       pageDescription: Da una traducción fija a las palabras que te importan y elige dónde se aplica cada lista.
       untitled: Glosario sin título
       noGlossaries: Aún no hay glosarios.
-      enable:
-        title: Activar
+      appliesTo:
+        title: Se aplica a
         description: Envía los términos coincidentes al LLM para que los traduzca a tu manera. El glosario viaja dentro del prompt, así que solo se aplica a las funciones que usan un proveedor LLM.
       library:
         title: Tus glosarios
@@ -1200,13 +1202,28 @@ options:
           confirm: Confirmar
           cancel: Cancelar
           description: "Se eliminarán permanentemente los $1 términos. Esta acción no se puede deshacer."
+  difficultWords:
+    title: Palabras difíciles
+    pageDescription: Resalta las palabras de una página que probablemente no conoces. Haz clic en una para consultarla y marca las que conoces para que no vuelvan a resaltarse.
+    enable:
+      title: Activar palabras difíciles
+      description: Muestra el botón de búsqueda en la ventana emergente y en el botón flotante, y activa su atajo
+    usage:
+      title: Uso
+    lookupAction:
+      title: Al hacer clic en una palabra se ejecuta
+      description: La acción AI que se abre al hacer clic en una palabra resaltada. El Diccionario integrado, salvo que elijas otra.
+    levels:
+      title: Tu nivel de lectura
+      description: Cada idioma tiene el suyo. Se te pregunta la primera vez que buscas en una página en ese idioma y se ajusta a medida que marcas las palabras que conoces.
+      empty: Ninguno todavía. La primera vez que busques en una página en un idioma, se te preguntará tu nivel en él.
+      known: Probablemente conoces las $1 palabras más comunes
+      loginRequired: Inicia sesión para ver y cambiar tu nivel en cada idioma
+      loadError: No se pudieron cargar tus niveles de lectura. Inténtalo más tarde.
   contextMenu:
     title: Menú contextual
     pageDescription: Controla las opciones de Read Frog en el menú contextual del navegador.
     demoImageAlt: Demostración del menú contextual
-    enable:
-      title: Activar traducción en menú contextual
-      description: Añade opciones de traducción al menú contextual del navegador para traducir rápidamente páginas y selecciones
   translation:
     title: Traducción de páginas
     pageDescription: Controla cómo se traducen las páginas — modo, alcance, prompts y límites de solicitudes.
@@ -1471,8 +1488,6 @@ options:
     aiQuota:
       title: Cuota de subtítulos con IA
       description: El reconocimiento de voz con IA te da subtítulos precisos para cualquier vídeo
-      launchBonusPromo: Suscríbete antes del $1 y obtén 300 minutos de transcripción adicionales
-      loginRequired: Inicia sesión para ver tu cuota de subtítulos con IA
       upgradeRequired: Los subtítulos con IA requieren una suscripción Pro o Ultra
       pools:
         subscription: Cuota mensual
@@ -1578,6 +1593,53 @@ options:
           confirm: Confirmar
           cancel: Cancelar
           description: Esto eliminará todos los resultados de segmentación AI en caché. La próxima vez que reproduzcas un video con segmentación AI activada, se volverán a procesar los subtítulos.
+  simpleMode:
+    title: "Modo simple"
+    pageDescription: "Una función que desactivas es como si no estuviera instalada: deja de aparecer en las páginas web y sus atajos no hacen nada. Su configuración se conserva, así que al volver a activarla todo queda como estaba."
+    drawerDescription: "Las funciones que desactives desaparecen en todas partes. Su configuración se conserva"
+    features:
+      customActions:
+        title: "Acciones AI personalizadas"
+        description: "Las acciones AI de la barra de selección y del menú contextual, incluidos el Diccionario y el Análisis de oraciones integrados"
+      pageTranslation:
+        title: "Traducción de páginas"
+        description: "Traduce páginas web completas"
+        hover:
+          title: "Traducción al pasar el cursor"
+          description: "Pasa el cursor o mantén pulsado un párrafo para traducir solo ese"
+      videoSubtitles:
+        title: "Subtítulos de video"
+        description: "Añade a los reproductores de video un botón de subtítulos traducidos"
+      inputTranslation:
+        title: "Traducción de entrada"
+        description: "Pulsa la barra espaciadora tres veces seguidas en cualquier campo de entrada para traducir lo que has escrito"
+      floatingButton:
+        title: "Botón flotante"
+        description: "Muestra el botón flotante en páginas web para acceder rápidamente a las funciones de Read Frog"
+      selectionToolbar:
+        title: "Barra de selección"
+        description: "Muestra la barra de herramientas al seleccionar texto en páginas web para traducción rápida, voz y acciones AI"
+        annotation:
+          title: "Anotación de palabras"
+          description: "Subraya la palabra o frase seleccionada y escribe su significado entre las líneas"
+        translate:
+          title: "Traducción de la selección"
+          description: "Muestra el botón de traducción en la barra de herramientas"
+          noteSuggestion:
+            title: "Sugerencias de notas"
+            description: "Después de traducir una selección con un proveedor de IA, sugerir palabras para guardar en tu Notebase"
+        speak:
+          title: "Leer en voz alta"
+          description: "Muestra el botón de voz, que lee en voz alta el texto seleccionado"
+      contextMenu:
+        title: "Menú contextual"
+        description: "Las opciones de Read Frog en el menú contextual del navegador"
+      translationHub:
+        title: "Centro de traducción"
+        description: "Traduce texto con varios modelos al mismo tiempo"
+      glossary:
+        title: "Glosario"
+        description: "Traduce las palabras que te importan como tú decidiste"
   whatsNew:
     title: Novedades
     postType:
@@ -1623,6 +1685,7 @@ translation:
   sameLanguage: Los idiomas de origen y destino deben ser diferentes
   autoModeSameLanguage: El idioma detectado '$1' es el mismo que el idioma de destino
   extensionContextInvalidated: La extensión se actualizó. Actualiza esta página e inténtalo de nuevo.
+  inputTranslationFailed: "Falló la traducción de entrada"
 pageDiagnosis:
   title: "Diagnóstico de la página"
   summary: "$1 traducidos, $2 sin traducir"
@@ -1667,7 +1730,7 @@ hideMenu:
   untilReload: Hasta que recargue la página
   onSite: En $1
   onAllSites: En todos los sitios
-  restoreHint: Se puede volver a activar en $1.
+  restoreHint: "Se puede volver a activar en $1 o en $2."
 action:
   copy: Copiar
   copied: Copiado
@@ -1818,6 +1881,9 @@ hostedAi:
     serviceUnavailable: No disponible temporalmente
     usedPercent: "Cuota utilizada: $1%"
     resetsAt: "Se restablece a las $1"
+  requestId:
+    label: "ID de solicitud:"
+    copy: "Copiar ID de solicitud"
   errors:
     rateLimited: Demasiadas solicitudes, inténtalo de nuevo más tarde.
     guestRateLimited: Demasiadas solicitudes de invitado. Inténtalo de nuevo más tarde.
@@ -1870,3 +1936,39 @@ translationHub:
   translationFailed: Falló la traducción
   translationFailedFallback: Falló la traducción
   retryTranslation: Reintentar traducción
+difficultWords:
+  name: Palabras difíciles
+  scan: Buscar palabras
+  clear: Borrar
+  clearCount: Borrar $1 palabras difíciles
+  scanTooltip: Resalta las palabras de esta página que probablemente no conoces
+  clearTooltip: Quita los resaltados de esta página
+  translationOnlyUnavailable: No disponible en el modo «Solo traducción», que no deja texto original en la página
+  unavailableHere: Read Frog no está activado en esta página
+  unavailableHereHint: Si la página ya estaba abierta antes de instalar o actualizar Read Frog, recárgala y vuelve a intentarlo.
+  known: La conozco
+  knownDescription: Marcar como conocida. No volverá a resaltarse, ni en esta página ni en otras.
+  markKnown: Conozco esta palabra
+  markedKnown: Marcada como conocida
+  undo: Deshacer
+  offline: No se puede conectar con el servidor ahora mismo. La búsqueda se reanuda sola cuando vuelva.
+  empty: No hay párrafos que analizar en esta página
+  signInRequired: Inicia sesión para buscar palabras difíciles
+  restricted: Palabras difíciles está en beta y aún no está disponible para tu cuenta
+  dailyLimit: Has alcanzado el límite de hoy de palabras difíciles. Se restablece a las $1.
+  unsupportedBrowser: Este navegador no puede resaltar palabras en una página. Actualízalo para usar Palabras difíciles.
+  level:
+    title: ¿Cuál es tu nivel de lectura en $1?
+    description: Elige el más cercano. Decide qué palabras se resaltan al principio.
+    footer: Se ajusta a medida que marcas las palabras que conoces.
+    later: Ahora no
+    unsure: No lo sé
+    saveFailed: No se pudo guardar tu nivel. Inténtalo más tarde.
+    descriptions:
+      A1: Nombres, palabras y frases muy sencillas y conocidas, como las de anuncios, carteles y catálogos
+      A2: Textos muy breves y sencillos; encontrar lo que buscas en anuncios, menús y horarios; cartas personales breves
+      B1: Textos redactados sobre todo en lengua cotidiana, sobre la vida diaria o el trabajo; descripciones de hechos, sentimientos y deseos en cartas personales
+      B2: Artículos e informes sobre problemas actuales en los que el autor adopta una postura clara; prosa literaria contemporánea
+      C1: Textos largos y complejos, literarios o basados en hechos, distinguiendo estilos; artículos especializados e instrucciones técnicas largas fuera de tu campo
+      C2: Prácticamente cualquier texto escrito, incluidos textos abstractos de estructura y lenguaje complejos, como manuales, artículos especializados y obras literarias
+      unsure: Se cuenta como A2. Mejor empezar bajo; el exceso de resaltados se corrige rápido marcando las palabras que conoces, y si hay muy pocos no queda nada en qué hacer clic.

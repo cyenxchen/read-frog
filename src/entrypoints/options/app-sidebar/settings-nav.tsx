@@ -8,6 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/base-ui/sidebar"
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag"
 import { i18n } from "@/utils/i18n"
 
 export function SettingsNav() {
@@ -18,10 +19,23 @@ export function SettingsNav() {
       <SidebarGroupLabel>{i18n.t("options.sidebar.settings")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
+          {ACCOUNT_FEATURES_ENABLED && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link to="/usage" />}
+                isActive={pathname === "/usage"}
+                tooltip={i18n.t("options.usage.title")}
+              >
+                <Icon icon="tabler:gauge" />
+                <span>{i18n.t("options.usage.title")}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+
           <SidebarMenuItem>
             <SidebarMenuButton
               render={<Link to="/api-providers" />}
-              isActive={pathname === "/api-providers" || pathname === "/"}
+              isActive={pathname === "/api-providers"}
               tooltip={i18n.t("options.apiProviders.title")}
             >
               <Icon icon="tabler:api" />
@@ -32,7 +46,8 @@ export function SettingsNav() {
           <SidebarMenuItem>
             <SidebarMenuButton
               render={<Link to="/preference" />}
-              isActive={pathname.startsWith("/preference")}
+              // The landing page: the options page opens on Preference.
+              isActive={pathname.startsWith("/preference") || pathname === "/"}
               tooltip={i18n.t("options.preference.title")}
             >
               <Icon icon="tabler:adjustments-horizontal" />

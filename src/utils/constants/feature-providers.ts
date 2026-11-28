@@ -1,7 +1,9 @@
 import type { Config } from "@/types/config/config"
 import type { ProviderConfig } from "@/types/config/provider"
+import type { FeatureTag } from "@/utils/features"
 import { isLLMProvider, isTranslateProvider } from "@/types/config/provider"
-import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag"
+import { isShown } from "@/utils/features"
 import { mergeWithArrayOverwrite } from "../atoms/config"
 import { getProviderConfigById } from "../config/helpers"
 
@@ -23,6 +25,12 @@ export interface FeatureProviderDef {
   getProviderId: (config: Config) => string
   configPath: readonly string[]
   isProvider: (provider: string) => boolean
+  /**
+   * The simple mode feature the provider serves: its provider picker goes away while that
+   * feature is off. Selection translation has none, because the toolbar's translate button,
+   * word annotation and the context menu all translate with it.
+   */
+  feature?: FeatureTag
 }
 
 export const FEATURE_PROVIDER_DEFS = {
@@ -30,11 +38,13 @@ export const FEATURE_PROVIDER_DEFS = {
     isProvider: isTranslateProvider,
     getProviderId: (c: Config) => c.pageTranslation.providerId,
     configPath: ["pageTranslation", "providerId"],
+    feature: "pageTranslation",
   },
   videoSubtitles: {
     isProvider: isTranslateProvider,
     getProviderId: (c: Config) => c.videoSubtitles.providerId,
     configPath: ["videoSubtitles", "providerId"],
+    feature: "videoSubtitles",
   },
   selectionTranslation: {
     isProvider: isTranslateProvider,
@@ -45,13 +55,22 @@ export const FEATURE_PROVIDER_DEFS = {
     isProvider: isTranslateProvider,
     getProviderId: (c: Config) => c.inputTranslation.providerId,
     configPath: ["inputTranslation", "providerId"],
+    feature: "inputTranslation",
   },
   noteSuggestion: {
     isProvider: isLLMProvider,
     getProviderId: (c: Config) => c.selectionToolbar.noteSuggestion.providerId,
     configPath: ["selectionToolbar", "noteSuggestion", "providerId"],
+    feature: "selectionToolbar.translate.noteSuggestion",
   },
 } as const satisfies Record<FeatureKey, FeatureProviderDef>
+
+/** The features whose provider pickers show: a feature that is off takes its picker with it. */
+export function getShownFeatureKeys(config: Config): FeatureKey[] {
+  return FEATURE_KEYS.filter((key) =>
+    isShown(config, (FEATURE_PROVIDER_DEFS[key] as FeatureProviderDef).feature),
+  )
+}
 
 /** Maps FeatureKey (with dots) to i18n-safe key (with underscores) for `options.apiProviders.featureProviders.features.*` */
 export const FEATURE_KEY_I18N_MAP = {

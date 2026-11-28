@@ -1,5 +1,7 @@
 import type { ReactNode } from "react"
+import type { RoutePath } from "./nav-items"
 import { Icon } from "@iconify/react"
+import { useAtomValue } from "jotai"
 import { useState } from "react"
 import { Link, useLocation } from "react-router"
 import { browser } from "#imports"
@@ -21,9 +23,13 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/base-ui/sidebar"
 import { env } from "@/env"
-import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag" // fork:account-off
+import { ACCOUNT_FEATURES_ENABLED } from "@/utils/account-features/flag"
+import { configAtom } from "@/utils/atoms/config"
 import { TRANSLATION_HUB_PAGE_PATH } from "@/utils/constants/translation-hub"
+import { isFeatureOn, isShown } from "@/utils/features"
 import { i18n } from "@/utils/i18n"
+import { DIFFICULT_WORDS_ROUTE, useIsDifficultWordsOpen } from "../pages/difficult-words/access"
+import { getRouteFeature } from "./nav-items"
 
 const PdfTranslationItem = ACCOUNT_FEATURES_ENABLED ? SidebarMenuSubItem : () => null // fork:account-off
 
@@ -40,11 +46,18 @@ const TRANSLATION_PATHS = ["/page-translation", "/video-subtitles", "/input-tran
 
 export function FeaturesNav() {
   const { pathname } = useLocation()
+  const config = useAtomValue(configAtom)
+  // A page of a feature simple mode turned off leaves the sidebar with it, and a group left
+  // with nothing to list goes too. Pages several features share stay.
+  const shows = (path: RoutePath) => isShown(config, getRouteFeature(path))
+  const shownOverlayToolsPaths = OVERLAY_TOOLS_PATHS.filter(shows)
   const isOverlayToolsActive = OVERLAY_TOOLS_PATHS.includes(pathname)
   const isTranslationActive = TRANSLATION_PATHS.some((path) => pathname.startsWith(path))
   // `startsWith`, so the group stays lit while a single glossary is open on
   // `/advanced/glossary/:glossaryId`.
   const isAdvancedActive = pathname.startsWith("/advanced")
+  // Only for the accounts it is open to while it is in testing.
+  const isDifficultWordsOpen = useIsDifficultWordsOpen()
 
   return (
     <SidebarGroup>
@@ -83,30 +96,36 @@ export function FeaturesNav() {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      render={<Link to="/page-translation" />}
-                      isActive={pathname.startsWith("/page-translation")}
-                    >
-                      <span>{i18n.t("options.translation.title")}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      render={<Link to="/video-subtitles" />}
-                      isActive={pathname.startsWith("/video-subtitles")}
-                    >
-                      <span>{i18n.t("options.videoSubtitles.title")}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      render={<Link to="/input-translation" />}
-                      isActive={pathname === "/input-translation"}
-                    >
-                      <span>{i18n.t("options.inputTranslation.title")}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
+                  {shows("/page-translation") && (
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link to="/page-translation" />}
+                        isActive={pathname.startsWith("/page-translation")}
+                      >
+                        <span>{i18n.t("options.translation.title")}</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  )}
+                  {shows("/video-subtitles") && (
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link to="/video-subtitles" />}
+                        isActive={pathname.startsWith("/video-subtitles")}
+                      >
+                        <span>{i18n.t("options.videoSubtitles.title")}</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  )}
+                  {shows("/input-translation") && (
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link to="/input-translation" />}
+                        isActive={pathname === "/input-translation"}
+                      >
+                        <span>{i18n.t("options.inputTranslation.title")}</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  )}
                   <PdfTranslationItem>
                     <SidebarMenuSubButton
                       render={
@@ -126,53 +145,74 @@ export function FeaturesNav() {
             </SidebarMenuItem>
           </CollapsibleNavGroup>
 
-          <CollapsibleNavGroup active={isOverlayToolsActive}>
+          {isDifficultWordsOpen && (
             <SidebarMenuItem>
-              <CollapsibleTrigger
-                render={
-                  <SidebarMenuButton
-                    isActive={isOverlayToolsActive}
-                    tooltip={i18n.t("options.overlayTools.title")}
-                  />
-                }
+              <SidebarMenuButton
+                render={<Link to={DIFFICULT_WORDS_ROUTE} />}
+                isActive={pathname === DIFFICULT_WORDS_ROUTE}
+                tooltip={i18n.t("options.difficultWords.title")}
               >
-                <Icon icon="tabler:layers-intersect" />
-                <span>{i18n.t("options.overlayTools.title")}</span>
-                <Icon
-                  icon="tabler:chevron-right"
-                  className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90"
-                />
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      render={<Link to="/floating-button" />}
-                      isActive={pathname === "/floating-button"}
-                    >
-                      <span>{i18n.t("options.floatingButton.title")}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      render={<Link to="/selection-toolbar" />}
-                      isActive={pathname === "/selection-toolbar"}
-                    >
-                      <span>{i18n.t("options.selectionToolbar.title")}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      render={<Link to="/context-menu" />}
-                      isActive={pathname === "/context-menu"}
-                    >
-                      <span>{i18n.t("options.contextMenu.title")}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </CollapsibleContent>
+                <Icon icon="tabler:highlight" />
+                <span>{i18n.t("options.difficultWords.title")}</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
-          </CollapsibleNavGroup>
+          )}
+
+          {shownOverlayToolsPaths.length > 0 && (
+            <CollapsibleNavGroup active={isOverlayToolsActive}>
+              <SidebarMenuItem>
+                <CollapsibleTrigger
+                  render={
+                    <SidebarMenuButton
+                      isActive={isOverlayToolsActive}
+                      tooltip={i18n.t("options.overlayTools.title")}
+                    />
+                  }
+                >
+                  <Icon icon="tabler:layers-intersect" />
+                  <span>{i18n.t("options.overlayTools.title")}</span>
+                  <Icon
+                    icon="tabler:chevron-right"
+                    className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90"
+                  />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {shows("/floating-button") && (
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          render={<Link to="/floating-button" />}
+                          isActive={pathname === "/floating-button"}
+                        >
+                          <span>{i18n.t("options.floatingButton.title")}</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    )}
+                    {shows("/selection-toolbar") && (
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          render={<Link to="/selection-toolbar" />}
+                          isActive={pathname === "/selection-toolbar"}
+                        >
+                          <span>{i18n.t("options.selectionToolbar.title")}</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    )}
+                    {shows("/context-menu") && (
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          render={<Link to="/context-menu" />}
+                          isActive={pathname === "/context-menu"}
+                        >
+                          <span>{i18n.t("options.contextMenu.title")}</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    )}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </CollapsibleNavGroup>
+          )}
 
           {ACCOUNT_FEATURES_ENABLED && (
             <SidebarMenuItem>
@@ -187,7 +227,7 @@ export function FeaturesNav() {
             </SidebarMenuItem>
           )}
 
-          {ACCOUNT_FEATURES_ENABLED && (
+          {ACCOUNT_FEATURES_ENABLED && isFeatureOn(config, "translationHub") && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 render={
@@ -223,12 +263,22 @@ export function FeaturesNav() {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
+                  {shows("/advanced/glossary") && (
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link to="/advanced/glossary" />}
+                        isActive={pathname.startsWith("/advanced/glossary")}
+                      >
+                        <span>{i18n.t("options.advanced.glossary.title")}</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  )}
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton
-                      render={<Link to="/advanced/glossary" />}
-                      isActive={pathname.startsWith("/advanced/glossary")}
+                      render={<Link to="/advanced/simple-mode" />}
+                      isActive={pathname === "/advanced/simple-mode"}
                     >
-                      <span>{i18n.t("options.advanced.glossary.title")}</span>
+                      <span>{i18n.t("options.simpleMode.title")}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                 </SidebarMenuSub>

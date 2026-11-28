@@ -52,8 +52,6 @@ popup:
         action: 點選切換為雙語對照
   hub:
     tooltip: 一次使用多個翻譯模型翻譯文字
-  discord:
-    tooltip: 加入 Discord 與開發者討論，搶先體驗新功能
   blog:
     notification: 陪讀蛙更新動態
   aiSmartContext: AI 智慧上下文
@@ -153,6 +151,17 @@ options:
       title: 微信群
       description: 掃描 QR code 進入微信討論群
       qrCodeAlt: 微信 QR code
+  usage:
+    title: 用量
+    pageDescription: 查看你的會員和 AI 額度。
+    notSignedIn: 未登入
+    guest: 訪客
+    manageSubscription: 管理訂閱
+    logInToView: 登入後查看
+    footer:
+      logIn: 登入後每週送免費 AI 額度
+      upgrade: 升級 Pro 解鎖 AI 字幕和更多內建 AI 額度
+      upgradeAction: 升級會員
   apiProviders:
     title: API 提供者
     pageDescription: 使用 Read Frog 內建模型或接入第三方 AI 服務，並為每項功能指定使用哪一個。
@@ -195,14 +204,14 @@ options:
         languageDetection: 語言偵測
         pdfTranslation: PDF 翻譯
     sponsorCta: 取得高速高性價比 AI
-    sponsorCtaJalapenoCloud: 取得 GLM 5.3 五折優惠
+    sponsorCtaJalapenoCloud: "黑色星期五，DS4.1 Flash 五折"
     sponsorCtaIfapi: 首儲加贈 10%，優惠碼 READFROG
     setApiKeyWarning:
       message: 請在 $1 頁面設定 API 金鑰
     badges:
       featureCount: $1 個功能
       sponsor: 贊助
-      sponsorJalapenoCloud: $$1 免費額度
+      sponsorJalapenoCloud: "1$$ + 贈金 30%起"
       sponsorIfapi: 1 折模型
     dialog:
       title: 新增提供者
@@ -293,7 +302,7 @@ options:
         anthropic: 以安全性和推理能力著稱的 Claude 模型
         xai: 馬斯克的 AI 公司，提供具有即時資料存取能力的 Grok 模型
         atlascloud: 統一的 OpenAI 相容模型平台，提供 DeepSeek、Kimi、Qwen、豆包、GLM 等較新模型
-        jalapenocloud: 頂尖團隊都在用的企業級 AI，現在為你而來！
+        jalapenocloud: "每週固定 Flash 打折"
         ifapi: GPT、Claude、Gemini 等主流模型，最低官方價 1 折
         siliconflow: 針對中國和國際模型的高效能推理平台
         tensdaq: 革命性競價 AI MaaS 平台，價格由市場供需決定，告別高成本固定定價
@@ -560,6 +569,9 @@ options:
     translationMode:
       title: 翻譯模式
       description: 在雙語對照和僅顯示翻譯之間切換。
+    difficultWords:
+      title: 掃描難詞
+      description: 標出目前頁面上你可能不認識的詞，再按一次清除
     selectionTranslation:
       title: 選取文字翻譯
       description: 翻譯選取的文字。
@@ -596,9 +608,7 @@ options:
     pageDescription: 在送出之前，把你在輸入框裡寫的內容翻譯好。
     trigger:
       title: 觸發方式
-      enable:
-        title: 啟用
-        description: 在任何輸入欄位中快速連按 3 次空白鍵，即可翻譯你輸入的內容。
+      description: 在任何輸入欄位中快速連按 3 次空白鍵，即可翻譯你輸入的內容。
       threshold:
         title: 觸發門檻值
         description: 相鄰兩次按鍵之間最多可間隔多少毫秒。經常觸發不了就調大，打字時誤觸發就調小。
@@ -617,9 +627,6 @@ options:
     title: 懸浮按鈕
     pageDescription: 設定懸浮按鈕停在哪一側、點擊後做什麼，以及在哪些網站不顯示。
     demoImageAlt: 懸浮按鈕示範
-    enable:
-      title: 啟用懸浮按鈕
-      description: 在網頁上顯示懸浮按鈕，快速存取陪讀蛙功能
     display:
       title: 顯示
       side:
@@ -639,6 +646,7 @@ options:
       translate: 切換頁面翻譯
     closeMenu:
       title: 隱藏懸浮按鈕
+    pageTranslationOff: "網頁翻譯已在簡潔模式中關閉"
     tooltips:
       togglePageTranslation: 切換頁面翻譯
       floatingButtonOptions: 懸浮按鈕選項
@@ -649,9 +657,6 @@ options:
     title: 選取工具列
     pageDescription: 設定選取文字時出現哪些操作，以及工具列在哪些網站顯示。
     demoImageAlt: 選取工具列示範
-    enable:
-      title: 啟用選取工具列
-      description: 在網頁上選取文字時顯示工具列，快速翻譯、朗讀和使用 AI 指令
     annotation:
       title: "劃詞標註"
       enable:
@@ -663,13 +668,10 @@ options:
     actions:
       title: 操作
       translate:
-        title: 翻譯
         description: 在工具列中顯示翻譯按鈕
       speak:
-        title: 朗讀
         description: 在工具列中顯示朗讀按鈕，用於朗讀選取的文字
       noteSuggestion:
-        title: 猜你想存
         description: 使用 AI 供應商進行劃詞翻譯後，推薦可存入筆記庫的詞條
         action: 指令
         actionDescription: 用於產生「猜你想存」的指令
@@ -1104,8 +1106,8 @@ options:
       pageDescription: 為你在意的詞語指定固定的譯文，並決定每份清單在哪些網站生效。
       untitled: 未命名術語庫
       noGlossaries: 還沒有術語庫。
-      enable:
-        title: 啟用
+      appliesTo:
+        title: 生效範圍
         description: 把命中的術語一併傳給 LLM，讓它照你的寫法翻譯。術語庫是隨提示詞一起送出的，所以只對執行於 LLM 提供者的功能生效。
       library:
         title: 你的術語庫
@@ -1205,13 +1207,28 @@ options:
           confirm: 確認
           cancel: 取消
           description: "全部 $1 筆術語將被永久刪除。此操作無法復原。"
+  difficultWords:
+    title: 難詞掃描
+    pageDescription: 在網頁上標出你可能不認識的詞。點一下看釋義；認識的詞點「認識」，以後就不再標。
+    enable:
+      title: 啟用難詞掃描
+      description: 在彈出視窗和懸浮按鈕上顯示「掃描難詞」，並啟用它的快速鍵
+    usage:
+      title: 使用
+    lookupAction:
+      title: 點開難詞時執行
+      description: 點開標出的詞時開啟的 AI 指令，預設是內建的字典
+    levels:
+      title: 我的閱讀程度
+      description: 每種語言分開計算。第一次掃描某種語言的頁面時會問你，之後根據你標「認識」的詞自動調整。
+      empty: 還沒有。第一次掃描某種語言的頁面時，會先問你在這種語言裡的程度。
+      known: 大約認識最常用的 $1 個詞
+      loginRequired: 登入後可以查看和修改各語言的程度
+      loadError: 沒能讀取你的閱讀程度，請稍後再試
   contextMenu:
     title: 右鍵選單
     pageDescription: 控制瀏覽器右鍵選單裡的 Read Frog 選項。
     demoImageAlt: 右鍵選單示範
-    enable:
-      title: 啟用右鍵翻譯
-      description: 在瀏覽器右鍵選單中新增翻譯選項，快速翻譯頁面或選取的文字
   translation:
     title: 網頁翻譯
     pageDescription: 控制頁面翻譯的方式：模式、範圍、提示詞和請求限制。
@@ -1476,8 +1493,6 @@ options:
     aiQuota:
       title: AI 字幕額度
       description: AI 利用語音轉文字技術取得任何影片的準確字幕
-      launchBonusPromo: $1 之前購買會員額外贈送 300 分鐘轉錄額度
-      loginRequired: 登入後查看你的 AI 字幕額度
       upgradeRequired: AI 字幕需要 Pro 或 Ultra 訂閱
       pools:
         subscription: 每月額度
@@ -1583,6 +1598,53 @@ options:
           confirm: 確認
           cancel: 取消
           description: 這將刪除所有已快取的 AI 斷句結果。下次播放啟用 AI 斷句的影片時，將重新處理字幕。
+  simpleMode:
+    title: "簡潔模式"
+    pageDescription: "關掉的功能就像沒裝：網頁上不出現，快速鍵也不回應。它的設定會保留，重新開啟後一切照舊。"
+    drawerDescription: "關掉的功能不會出現在任何地方，設定會保留"
+    features:
+      customActions:
+        title: "自訂 AI 指令"
+        description: "選取工具列和右鍵選單裡的 AI 指令，包括內建的字典、長難句分析"
+      pageTranslation:
+        title: "網頁翻譯"
+        description: "翻譯整個網頁"
+        hover:
+          title: "滑鼠停留翻譯"
+          description: "滑鼠停留或長按段落，只翻譯這一段"
+      videoSubtitles:
+        title: "影片字幕"
+        description: "在影片播放器裡加上翻譯字幕按鈕"
+      inputTranslation:
+        title: "輸入翻譯"
+        description: "在任何輸入欄位中快速連按 3 次空白鍵，即可翻譯你輸入的內容"
+      floatingButton:
+        title: "懸浮按鈕"
+        description: "在網頁上顯示懸浮按鈕，快速存取陪讀蛙功能"
+      selectionToolbar:
+        title: "選取工具列"
+        description: "在網頁上選取文字時顯示工具列，快速翻譯、朗讀和使用 AI 指令"
+        annotation:
+          title: "劃詞標註"
+          description: "為選取的詞或短語加上底線，並在行間寫出釋義"
+        translate:
+          title: "選取文字翻譯"
+          description: "在工具列中顯示翻譯按鈕"
+          noteSuggestion:
+            title: "猜你想存"
+            description: "使用 AI 供應商進行劃詞翻譯後，推薦可存入筆記庫的詞條"
+        speak:
+          title: "朗讀"
+          description: "在工具列中顯示朗讀按鈕，用於朗讀選取的文字"
+      contextMenu:
+        title: "右鍵選單"
+        description: "瀏覽器右鍵選單裡的陪讀蛙選項"
+      translationHub:
+        title: "翻譯中心"
+        description: "一次使用多個翻譯模型翻譯文字"
+      glossary:
+        title: "術語庫"
+        description: "讓你在意的詞語按你定的譯法翻譯"
   whatsNew:
     title: 最近更新
     postType:
@@ -1628,6 +1690,7 @@ translation:
   sameLanguage: 來源語言和目標語言必須不同
   autoModeSameLanguage: 偵測到的語言「$1」與目標語言相同
   extensionContextInvalidated: 擴充功能已更新，請重新整理此頁面後再試一次。
+  inputTranslationFailed: "輸入翻譯失敗"
 pageDiagnosis:
   title: "頁面診斷"
   summary: "已翻譯 $1 段，未翻譯 $2 段"
@@ -1672,7 +1735,7 @@ hideMenu:
   untilReload: 直到重新整理頁面
   onSite: 在 $1 上
   onAllSites: 在所有網站上
-  restoreHint: 可在「$1」中重新開啟。
+  restoreHint: "可在「$1」或「$2」中重新開啟。"
 action:
   copy: 複製
   copied: 已複製
@@ -1823,6 +1886,9 @@ hostedAi:
     serviceUnavailable: 暫時無法使用
     usedPercent: "額度已使用 $1%"
     resetsAt: "$1 重置"
+  requestId:
+    label: "請求 ID："
+    copy: "複製請求 ID"
   errors:
     rateLimited: 請求過於頻繁，請稍後再試
     guestRateLimited: 訪客請求過於頻繁，請稍後再試
@@ -1875,3 +1941,39 @@ translationHub:
   translationFailed: 翻譯失敗
   translationFailedFallback: 翻譯失敗
   retryTranslation: 重試翻譯
+difficultWords:
+  name: 難詞掃描
+  scan: 掃描難詞
+  clear: 清除難詞
+  clearCount: 清除難詞 $1
+  scanTooltip: 標出這頁上你可能不認識的詞
+  clearTooltip: 清除這頁上標出的難詞
+  translationOnlyUnavailable: 「僅顯示翻譯」模式下頁面上沒有原文，無法掃描難詞
+  unavailableHere: 陪讀蛙在這個頁面上沒有啟用
+  unavailableHereHint: 如果這個頁面是在安裝或更新陪讀蛙之前開啟的，請重新整理後再試。
+  known: 認識
+  knownDescription: 標為認識：這頁和其他頁都不再標出這個詞
+  markKnown: 認識這個詞
+  markedKnown: 已記為認識
+  undo: 復原
+  offline: 暫時連不上伺服器，恢復後自動繼續
+  empty: 這頁沒有可以掃描的段落
+  signInRequired: 登入後才能掃描難詞
+  restricted: 難詞掃描還在 Beta 測試，暫未對你的帳號開放
+  dailyLimit: 今天的難詞掃描額度用完了，$1 恢復
+  unsupportedBrowser: 目前的瀏覽器無法在頁面上標出單字，請更新瀏覽器後再使用難詞掃描
+  level:
+    title: 你的$1閱讀程度大概是？
+    description: 選最接近的一項，用來決定一開始標出哪些詞
+    footer: 之後會根據你的點擊自動調整
+    later: 以後再說
+    unsure: 不確定
+    saveFailed: 沒能儲存程度，請稍後再試
+    descriptions:
+      A1: 熟悉的名字、單字和很簡單的句子，例如告示、海報、目錄上的
+      A2: 很短、很簡單的文字；能在廣告、菜單、時刻表裡找到需要的資訊；簡短的私人信件
+      B1: 以常用詞為主的文字，例如日常生活和工作相關的；私人信件裡對事情、感受、願望的描述
+      B2: 討論當代問題的文章和報導，作者有明確的立場和觀點；當代文學散文
+      C1: 較長、較複雜的事實性和文學性文字，能體會風格的差別；非自己領域的專業文章和較長的技術說明
+      C2: 幾乎所有形式的書面語，包括抽象的、結構和語言都很複雜的文字，例如說明書、專業文章、文學作品
+      unsure: 按 A2 算。寧可偏低：標多了，點「認識」很快就能調上去；標少了，沒有東西可點，很難發現
